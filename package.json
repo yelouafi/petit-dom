@@ -5,11 +5,11 @@
   "main": "dist/index.js",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yelouafi/avenir.git"
+    "url": "git+https://github.com/yelouafi/petit-dom.git"
   },
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/yelouafi/avenir/issues"
+    "url": "https://github.com/yelouafi/petit-dom/issues"
   },
   "keywords": [
     "javascript",
