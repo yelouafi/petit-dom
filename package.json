@@ -1,0 +1,41 @@
+{
+  "name": "petit-dom",
+  "version": "0.0.1",
+  "description": "Raw virtual dom library",
+  "main": "dist/index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yelouafi/avenir.git"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/yelouafi/avenir/issues"
+  },
+  "keywords": [
+    "javascript",
+    "virtual dom"
+  ],
+  "author": "Yassine ELOUAFI <yelouafi@gmail.com>",
+  "dependencies": {},
+  "devDependencies": {
+    "eslint": "^3.19.0",
+    "faucet": "0.0.1",
+    "husky": "^0.13.3",
+    "lint-staged": "^3.4.1",
+    "prettier": "^1.5.2",
+    "rimraf": "^2.6.1"
+  },
+  "scripts": {
+    "precommit": "lint-staged",
+    "lint": "eslint src test",
+    "test": "echo no tests yet",
+    "check": "npm run lint && npm run test"
+  },
+  "lint-staged": {
+    "*.js": [
+      "check",
+      "prettier --write",
+      "git add"
+    ]
+  }
+}
