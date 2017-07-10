@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <title>petit-dom Hello example</title>
+</head>
+<body>
+
+  <script src="../../dist/petit-dom.dev.js"></script>
+  <script>
+    const {h, createNode} = petitDom
+
+    const vel = h('p', 'Hello world')
+    document.body.appendChild(createNode(vel))
+  </script>
+</body>
+
+</html>
