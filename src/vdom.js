@@ -1,6 +1,15 @@
-function isComponent(type) {
-  return type && type.mount && type.update && type.unmount;
+function defShouldUpdate(c1, c2) {
+  if (c1 === c2) return false;
+  if (c1.content !== c2.content) return true;
+  var p1 = c1.props,
+    p2 = c2.props;
+  for (var key in p1) {
+    if (p1[key] !== p2[key]) return true;
+  }
+  return false;
 }
+
+var isArray = Array.isArray;
 
 export function createNode(c) {
   var node;
@@ -12,13 +21,15 @@ export function createNode(c) {
       node = document.createElement(c.type);
       setProps(node, c.props, undefined, c._ctx);
 
-      if (c._textChild) {
-        node.appendChild(document.createTextNode(c.content));
+      if (!isArray(c.content)) {
+        node.appendChild(createNode(c.content));
       } else {
         appendChildren(node, c.content);
       }
-    } else if (isComponent(c.type)) {
-      node = c.type.mount(c);
+    } else if (typeof c.type === "function") {
+      var vnode = c.type(c.props, c.content);
+      node = createNode(vnode);
+      c._data = vnode;
     }
   }
   if (node == null) {
@@ -47,19 +58,13 @@ function removeChildren(
   start = 0,
   end = children.length - 1
 ) {
-  /*
-  if(end - start + 1 === children.length) {
-    parent.textContent = ''
-    while(parent.firstChild) parent.removeChild(parent.firstChild)
-    return
+  if (start === 0 && end === children.length - 1) {
+    parent.textContent = "";
+    return;
   }
-  */
   while (start <= end) {
     var ch = children[start++];
-    if (isComponent(ch.type)) {
-      ch.type.unmount(ch._node);
-    }
-    parent.removeChild(ch._node);
+    if (ch) parent.removeChild(ch._node);
   }
 }
 
@@ -88,18 +93,30 @@ export function patch(newch, oldch, parent) {
     }
   } else if (oldch.type === newch.type) {
     const type = oldch.type;
-    if (isComponent(type)) {
-      childNode = type.update(childNode, newch.props, newch.content);
-    } else {
+    if (typeof type === "function") {
+      var shouldUpdateFn = type.shouldUpdate || defShouldUpdate;
+      if (shouldUpdateFn(oldch, newch)) {
+        var vnode = type(newch.props, newch.content);
+        childNode = patch(vnode, oldch._data, parent);
+        newch._data = vnode;
+      } else {
+        newch._data = oldch._data;
+      }
+    } else if (typeof type === "string") {
       setProps(childNode, newch.props, oldch.props, newch._ctx);
 
-      if (oldch._textChild && newch._textChild) {
+      if (!isArray(oldch.content) && !isArray(newch.content)) {
         if (oldch.content !== newch.content) {
-          childNode.firstChild.nodeValue = newch.content;
+          patch(newch.content, oldch.content, childNode);
         }
-      } else {
+      } else if (isArray(oldch.content) && isArray(newch.content)) {
         diffChildren(childNode, newch.content, oldch.content);
+      } else {
+        removeChildren(childNode, oldch.content, 0, oldch.content.length - 1);
+        appendChildren(childNode, newch);
       }
+    } else {
+      throw new Error("Unkown node type! " + type);
     }
   } else {
     childNode = createNode(newch);
@@ -109,7 +126,6 @@ export function patch(newch, oldch, parent) {
   }
 
   newch._node = childNode;
-  if (typeof VDOM_DEBUG !== "undefined") childNode.className = "match";
   return childNode;
 }
 
@@ -126,7 +142,8 @@ export function diffChildren(
   oldStart = 0,
   oldEnd = oldChildren.length - 1
 ) {
-  var ch, oldCh;
+  if (children === oldChildren) return;
+  var oldCh;
 
   /**
     Before applying the diff algorithm we try some preprocessing optimizations
@@ -145,13 +162,11 @@ export function diffChildren(
     newEnd,
     oldStart,
     oldEnd,
-    canPatch
+    canPatch,
+    parent
   );
-  while (k--) {
-    ch = children[newStart++];
-    oldCh = oldChildren[oldStart++];
-    patch(ch, oldCh, parent);
-  }
+  newStart += k;
+  oldStart += k;
 
   k = diffCommonSufffix(
     children,
@@ -160,13 +175,11 @@ export function diffChildren(
     newEnd,
     oldStart,
     oldEnd,
-    canPatch
+    canPatch,
+    parent
   );
-  while (k--) {
-    ch = children[newEnd--];
-    oldCh = oldChildren[oldEnd--];
-    patch(ch, oldCh, parent);
-  }
+  newEnd -= k;
+  oldEnd -= k;
 
   if (newStart > newEnd && oldStart > oldEnd) {
     return;
@@ -342,9 +355,16 @@ export function diffChildren(
   }
 }
 
-function diffCommonPrefix(s1, s2, start1, end1, start2, end2, eq) {
-  var k = 0;
-  while (start1 <= end1 && start2 <= end2 && eq(s1[start1], s2[start2])) {
+function diffCommonPrefix(s1, s2, start1, end1, start2, end2, eq, parent) {
+  var k = 0,
+    c1,
+    c2;
+  while (
+    start1 <= end1 &&
+    start2 <= end2 &&
+    eq((c1 = s1[start1]), (c2 = s2[start2]))
+  ) {
+    if (parent) patch(c1, c2);
     start1++;
     start2++;
     k++;
@@ -352,9 +372,16 @@ function diffCommonPrefix(s1, s2, start1, end1, start2, end2, eq) {
   return k;
 }
 
-function diffCommonSufffix(s1, s2, start1, end1, start2, end2, eq) {
-  var k = 0;
-  while (start1 <= end1 && start2 <= end2 && eq(s1[end1], s2[end2])) {
+function diffCommonSufffix(s1, s2, start1, end1, start2, end2, eq, parent) {
+  var k = 0,
+    c1,
+    c2;
+  while (
+    start1 <= end1 &&
+    start2 <= end2 &&
+    eq((c1 = s1[end1]), (c2 = s2[end2]))
+  ) {
+    if (parent) patch(c1, c2);
     end1--;
     end2--;
     k++;

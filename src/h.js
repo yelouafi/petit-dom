@@ -2,36 +2,22 @@ var EMPTYO = {};
 var EMPTYAR = [];
 var isArray = Array.isArray;
 
-function isPrimitive(c) {
-  var type = typeof c;
-  return (
-    type === "string" || type === "number" || type === "boolean" || c === null
-  );
-}
+export function h(type, props, contArg) {
+  var content;
+  var len = arguments.length - 2;
 
-function isChild(c) {
-  return isArray(c) || (c && c._vnode) || isPrimitive(c);
-}
-/**
-  h(type)
-  h(type, props, ...children)
-  h(type, ...children)
-**/
-export function h(type) {
-  var props, _textChild;
-  var startChIdx = 1;
-  var firstCh;
-  var len = arguments.length - 1;
-
-  if (len > 0) {
-    firstCh = arguments[startChIdx];
-    if (firstCh === null || !isChild(firstCh)) {
-      props = firstCh;
-      len--;
-      startChIdx++;
-      firstCh = arguments[startChIdx];
+  if (len === 0) {
+    content = EMPTYAR;
+  } else if (len === 1) {
+    if (isArray(contArg)) {
+      content = maybeFlatten(contArg);
+    } else if (contArg && contArg._vnode) {
+      content = contArg;
+    } else {
+      content = { _text: contArg };
     }
-    _textChild = len === 1 && isPrimitive(firstCh);
+  } else {
+    content = flattenChildren(arguments, 2, []);
   }
 
   return {
@@ -39,29 +25,30 @@ export function h(type) {
     type,
     key: props && props.key,
     props: props || EMPTYO,
-    content: _textChild
-      ? firstCh
-      : !len ? EMPTYAR : flattenChildren(arguments, startChIdx, []),
-    _textChild,
+    content,
     _data: null,
     _node: null
   };
 }
 
-function flattenChildren(children, start, arr) {
-  for (var i = start; i < children.length; i++) {
-    var ch = children[i];
-    appendNormalized(arr, ch);
+function maybeFlatten(arr) {
+  for (var i = 0; i < arr.length; i++) {
+    var ch = arr[i];
+    if (isArray(ch)) return flattenChildren(arr, i, arr.slice(0, i));
   }
   return arr;
 }
 
-function appendNormalized(arr, ch) {
-  if (isArray(ch)) {
-    flattenChildren(ch, 0, arr);
-  } else if (ch && ch._vnode) {
-    arr.push(ch);
-  } else {
-    arr.push({ _text: ch });
+function flattenChildren(children, start, arr) {
+  for (var i = start; i < children.length; i++) {
+    var ch = children[i];
+    if (isArray(ch)) {
+      flattenChildren(ch, 0, arr);
+    } else if (ch && ch._vnode) {
+      arr.push(ch);
+    } else {
+      arr.push({ _text: ch });
+    }
   }
+  return arr;
 }
