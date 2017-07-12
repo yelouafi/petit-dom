@@ -1,4 +1,4 @@
-import { isArray } from "./utils";
+import { isArray, isComponent } from "./utils";
 
 function defShouldUpdate(p1, p2, c1, c2) {
   if (c1 !== c2) return true;
@@ -23,6 +23,11 @@ export function createNode(c) {
       } else {
         appendChildren(node, c.content);
       }
+    } else if (isComponent(c.type)) {
+      node = c.type.mount(
+        c.type,
+        Object.assign({}, c.props, { content: c.content })
+      );
     } else if (typeof c.type === "function") {
       var vnode = c.type(c.props, c.content);
       node = createNode(vnode);
@@ -55,13 +60,24 @@ function removeChildren(
   start = 0,
   end = children.length - 1
 ) {
+  let cleared;
   if (parent.childNodes.length === end - start + 1) {
     parent.textContent = "";
-    return;
+    cleared = true;
   }
   while (start <= end) {
     var ch = children[start++];
-    if (ch) parent.removeChild(ch._node);
+    if (!cleared) parent.removeChild(ch._node);
+    unmount(ch);
+  }
+}
+
+function unmount(ch) {
+  if (ch && isComponent(ch.type)) {
+    ch.type.unmount(ch._node);
+  }
+  for (var i = 0; i < ch.content.length; i++) {
+    unmount(ch.content[i]);
   }
 }
 
@@ -90,7 +106,12 @@ export function patch(newch, oldch, parent) {
     }
   } else if (oldch.type === newch.type) {
     const type = oldch.type;
-    if (typeof type === "function") {
+    if (isComponent(type)) {
+      type.patch(
+        childNode,
+        Object.assign({}, newch.props, { content: newch.content })
+      );
+    } else if (typeof type === "function") {
       var shouldUpdateFn = type.shouldUpdate || defShouldUpdate;
       if (
         shouldUpdateFn(oldch.props, newch.props, oldch.content, newch.content)
@@ -258,6 +279,7 @@ export function diffChildren(
     var node = oldChildren[oldStart]._node;
     appendChildren(parent, children, newStart, newEnd, node);
     parent.removeChild(node);
+    unmount(node);
     return;
   }
   if (newStart === newEnd) {
@@ -543,6 +565,7 @@ function diffOND(
     oldCh = oldChildren[del[i]];
     if (oldCh != null) {
       parent.removeChild(oldCh._node);
+      unmount(oldCh);
     }
   }
 }
