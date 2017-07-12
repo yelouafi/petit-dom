@@ -62,7 +62,7 @@
   "bundlesize": [
     {
       "path": "./dist/petit-dom.min.js",
-      "threshold": "3 Kb"
+      "threshold": "4 Kb"
     }
   ]
 }
