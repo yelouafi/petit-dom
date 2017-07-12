@@ -1,15 +1,12 @@
-function defShouldUpdate(c1, c2) {
-  if (c1 === c2) return false;
-  if (c1.content !== c2.content) return true;
-  var p1 = c1.props,
-    p2 = c2.props;
+import { isArray } from "./utils";
+
+function defShouldUpdate(p1, p2, c1, c2) {
+  if (c1 !== c2) return true;
   for (var key in p1) {
     if (p1[key] !== p2[key]) return true;
   }
   return false;
 }
-
-var isArray = Array.isArray;
 
 export function createNode(c) {
   var node;
@@ -58,7 +55,7 @@ function removeChildren(
   start = 0,
   end = children.length - 1
 ) {
-  if (start === 0 && end === children.length - 1) {
+  if (parent.childNodes.length === end - start + 1) {
     parent.textContent = "";
     return;
   }
@@ -95,7 +92,9 @@ export function patch(newch, oldch, parent) {
     const type = oldch.type;
     if (typeof type === "function") {
       var shouldUpdateFn = type.shouldUpdate || defShouldUpdate;
-      if (shouldUpdateFn(oldch, newch)) {
+      if (
+        shouldUpdateFn(oldch.props, newch.props, oldch.content, newch.content)
+      ) {
         var vnode = type(newch.props, newch.content);
         childNode = patch(vnode, oldch._data, parent);
         newch._data = vnode;
