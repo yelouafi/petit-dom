@@ -1,68 +1,81 @@
-const {h, createNode, Component} = petitDom
+<!doctype html>
+<html lang="en">
+<head>
+  <title>petit-dom Hello example</title>
+</head>
+<body>
 
-class Counter extends Component {
-  constructor(props) {
-    super(props)
-    this.count = 0
-    this.inc = () => {
-      this.count++
-      this.updateUI(this.onInc)
+  <script src="../../dist/petit-dom.dev.js"></script>
+  <script>
+    const {h, createNode, Component} = petitDom
+
+    class Counter extends Component {
+      constructor(props) {
+        super(props)
+        this.count = 0
+        this.inc = () => {
+          this.count++
+          this.updateUI(this.onInc)
+        }
+        this.remove = () => this.props.onRemove(this.props.id)
+      }
+
+      onMount() {
+        console.log('Counter mounted', this.props.id, this.domNode)
+      }
+
+      onUnmount() {
+        console.log('Counter unmounted', this.props.id, this.domNode)
+      }
+
+      onInc() {
+        console.log('Counter incremented', this.props.id, this.domNode)
+      }
+
+      render() {
+        return h('p', null,
+          h('button', {onclick: this.inc}, '+'),
+          h('button', {onclick: this.remove}, 'X'),
+          'Counter #', this.props.id,': ', this.count
+        )
+      }
     }
-    this.remove = () => this.props.onRemove(this.props.id)
-  }
 
-  onMount() {
-    console.log('Counter mounted', this.props.id, this.domNode)
-  }
+    class App extends Component {
 
-  onUnmount() {
-    console.log('Counter unmounted', this.props.id, this.domNode)
-  }
+      constructor(props) {
+        super(props)
+        this.counters = []
+        this.uid = 1
+        this.addCounter = () => {
+          this.counters.push(this.uid++)
+          this.updateUI()
+        }
+        this.removeCounter = id => {
+          this.counters = this.counters.filter(it => it !== id)
+          this.updateUI()
+        }
+      }
 
-  onInc() {
-    console.log('Counter incremented', this.props.id, this.domNode)
-  }
+      onMount() {
+        console.log('App mounted', this.domNode)
+        this.addCounter()
+      }
 
-  render() {
-    return h('p', null,
-      h('button', {onclick: this.inc}, '+'),
-      h('button', {onclick: this.remove}, 'X'),
-      'Counter #', this.props.id,': ', this.count
-    )
-  }
-}
-
-class App extends Component {
-
-  constructor(props) {
-    super(props)
-    this.counters = []
-    this.uid = 1
-    this.addCounter = () => {
-      this.counters.push(this.uid++)
-      this.updateUI()
+      render() {
+        return h('div', null,
+          h('h1', null,  'counters demo'),
+          h('button', {onclick: this.addCounter}, 'Add Counter'),
+          this.counters.map(id => (
+            h(Counter, {id, onRemove: this.removeCounter})
+          ))
+        )
+      }
     }
-    this.removeCounter = id => {
-      this.counters = this.counters.filter(it => it !== id)
-      this.updateUI()
-    }
-  }
 
-  onMount() {
-    console.log('App mounted', this.domNode)
-    this.addCounter()
-  }
+    document.body.appendChild(createNode(h(App)))
 
-  render() {
-    return h('div', null,
-      h('h1', null,  'counters demo'),
-      h('button', {onclick: this.addCounter}, 'Add Counter'),
-      this.counters.map(id => (
-        h(Counter, {id, onRemove: this.removeCounter})
-      ))
-    )
-  }
-}
+  </script>
+</body>
 
-const vel = h(App)
-document.body.appendChild(createNode(vel))
+</html>
