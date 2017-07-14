@@ -32,7 +32,7 @@ export function maybeFlatten(arr) {
     var ch = arr[i];
     if (isArray(ch)) return flattenChildren(arr, i, arr.slice(0, i));
     else if (!ch || !ch._vnode) {
-      arr[i] = { _text: ch };
+      arr[i] = { _text: ch == null ? "" : ch };
     }
   }
   return arr;
