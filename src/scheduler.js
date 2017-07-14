@@ -1,4 +1,4 @@
-import { LOG } from "./utils";
+//import { LOG } from "./utils";
 
 var ref = {
   queue: [],
@@ -11,7 +11,7 @@ export function scheduleUpdate(comp, cb) {
   if (cb) ref.cbs.push([cb, comp]);
   if (!updateScheduled) {
     updateScheduled = true;
-    LOG("scheduling frame");
+    //LOG("scheduling frame");
     requestAnimationFrame(() => {
       flush();
       updateScheduled = false;
@@ -20,7 +20,7 @@ export function scheduleUpdate(comp, cb) {
 }
 
 function flush() {
-  LOG("begin flush");
+  //LOG("begin flush");
   var end = false;
   while (!end) {
     while (ref.queue.length) {
@@ -41,8 +41,8 @@ function flush() {
     if (!ref.queue.length) {
       end = true;
     } else {
-      LOG("flush: another pass");
+      //LOG("flush: another pass");
     }
   }
-  LOG("end flush");
+  //LOG("end flush");
 }
