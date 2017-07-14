@@ -33,11 +33,11 @@
       }
 
       render() {
-        return h('p', null,
-          h('button', {onclick: this.inc}, '+'),
+        return [
+          'Counter #', this.props.id,': ', this.count, ' ',
+          h('button', {onclick: this.inc}, '+'), ' ',
           h('button', {onclick: this.remove}, 'X'),
-          'Counter #', this.props.id,': ', this.count
-        )
+        ]
       }
     }
 
@@ -64,10 +64,13 @@
 
       render() {
         return h('div', null,
-          h('h1', null,  'counters demo'),
+          h('h1', null,  'counters demo '),
           h('button', {onclick: this.addCounter}, 'Add Counter'),
+          h('hr'),
           this.counters.map(id => (
-            h(Counter, {key: id, id, onRemove: this.removeCounter})
+            h('p', null,
+              h(Counter, {key: id, id, onRemove: this.removeCounter})
+            )
           ))
         )
       }
