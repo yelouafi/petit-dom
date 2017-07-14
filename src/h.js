@@ -21,7 +21,7 @@ export function h(type, props, contArg) {
   return {
     _vnode: true,
     type,
-    key: props && props.key,
+    key: (props && props.key) || null,
     props: props || EMPTYO,
     content
   };
@@ -31,6 +31,9 @@ export function maybeFlatten(arr) {
   for (var i = 0; i < arr.length; i++) {
     var ch = arr[i];
     if (isArray(ch)) return flattenChildren(arr, i, arr.slice(0, i));
+    else if (!ch || !ch._vnode) {
+      arr[i] = { _text: ch };
+    }
   }
   return arr;
 }
