@@ -6,3 +6,4 @@ global.document = document;
 
 require("./h.test");
 require("./mount.test");
+require("./patch.test");

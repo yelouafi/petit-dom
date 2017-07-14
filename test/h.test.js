@@ -68,7 +68,8 @@ test("vnode with multiple vnode contents", assert => {
       null,
       h("span", null, "span text"),
       h("input", { type: "number" }),
-      "raw text"
+      "raw text",
+      null
     ),
     {
       _vnode: true,
@@ -90,7 +91,8 @@ test("vnode with multiple vnode contents", assert => {
           props: { type: "number" },
           content: EMPTYAR
         },
-        { _text: "raw text" }
+        { _text: "raw text" },
+        { _text: "" }
       ]
     }
   );
