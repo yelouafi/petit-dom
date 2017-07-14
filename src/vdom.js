@@ -24,10 +24,7 @@ export function mount(c) {
         appendChildren(node, c.content);
       }
     } else if (isComponent(c.type)) {
-      node = c.type.mount(
-        c.type,
-        Object.assign({}, c.props, { content: c.content })
-      );
+      node = c.type.mount(c.props, c.content);
     } else if (typeof c.type === "function") {
       var vnode = c.type(c.props, c.content);
       node = mount(vnode);
@@ -108,10 +105,7 @@ export function patch(newch, oldch, parent) {
   } else if (oldch.type === newch.type) {
     const type = oldch.type;
     if (isComponent(type)) {
-      type.patch(
-        childNode,
-        Object.assign({}, newch.props, { content: newch.content })
-      );
+      type.patch(childNode, newch.props, newch.content);
     } else if (typeof type === "function") {
       var shouldUpdateFn = type.shouldUpdate || defShouldUpdate;
       if (

@@ -4,17 +4,19 @@ import { scheduleUpdate } from "./scheduler";
 import { diffChildren } from "./vdom";
 
 export class Component {
-  static mount(type, props) {
-    const inst = new type(props);
+  static mount(props, content) {
+    const inst = new this(props, content);
     inst.updateUI(inst.onMount);
     return inst.domNode;
   }
 
-  static patch(domNode, props) {
+  static patch(domNode, props, content) {
     const inst = domNode.$instance;
-    inst.beforeUpdate && inst.beforeUpdate(props);
-    const shouldUpdate = !inst.shouldUpdate || inst.shouldUpdate(props);
+    inst.beforeUpdate && inst.beforeUpdate(props, content);
+    const shouldUpdate =
+      !inst.shouldUpdate || inst.shouldUpdate(props, content);
     inst.props = props;
+    inst.content = content;
     if (shouldUpdate) {
       inst.updateUI(inst.onUpdate);
     }
@@ -26,8 +28,9 @@ export class Component {
     inst.onUnmount && inst.onUnmount();
   }
 
-  constructor(props) {
+  constructor(props, content) {
     this.props = props;
+    this.content = content;
     const tag = "v-" + (this.constructor.tag || this.constructor.name);
     this.domNode = document.createElement(tag);
     this.domNode.$instance = this;
