@@ -71,11 +71,13 @@ function removeChildren(
 
 export function unmount(ch) {
   if (isArray(ch)) {
-    for (var i = 0; i < ch.content.length; i++) {
-      unmount(ch.content[i]);
+    for (var i = 0; i < ch.length; i++) {
+      unmount(ch[i]);
     }
-  } else {
-    if (isComponent(ch.type)) ch.type.unmount(ch._node);
+  } else if (isComponent(ch.type)) {
+    ch.type.unmount(ch._node);
+  } else if (ch && ch._vnode) {
+    unmount(ch.content);
   }
 }
 
@@ -533,7 +535,9 @@ function diffOND(
   var node, chIdx, oldChIdx, oldMatchIdx;
   var oldMoved = [];
   for (var i = ins.length - 1; i >= 0; i--) {
-    [chIdx, oldChIdx] = ins[i];
+    const entry = ins[i];
+    chIdx = entry[0];
+    oldChIdx = entry[1];
     ch = children[chIdx];
     oldMatchIdx = oldKeyMap[ch.key];
     if (oldMatchIdx != null) {
