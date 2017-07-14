@@ -1,4 +1,4 @@
-import { h, createNode, patch } from "../../../src/index";
+import { h, mount, patch } from "../../../src/index";
 
 // manually set a custom class on the children
 // A virtual dom which supports keying should preserve the class of the marked nodes
@@ -10,7 +10,7 @@ function markNodes() {
 }
 
 var vel = <div />;
-document.body.appendChild(createNode(vel));
+document.body.appendChild(mount(vel));
 
 var value = "ABCD";
 

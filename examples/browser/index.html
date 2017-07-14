@@ -7,10 +7,10 @@
 
   <script src="../../dist/petit-dom.dev.js"></script>
   <script>
-    const {h, createNode} = petitDom
+    const {h, mount} = petitDom
 
     const vel = h('p', null, 'Hello world')
-    document.body.appendChild(createNode(vel))
+    document.body.appendChild(mount(vel))
   </script>
 </body>
 

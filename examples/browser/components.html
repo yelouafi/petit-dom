@@ -7,7 +7,7 @@
 
   <script src="../../dist/petit-dom.dev.js"></script>
   <script>
-    const {h, createNode, Component} = petitDom
+    const {h, mount, Component} = petitDom
 
     class Counter extends Component {
       constructor(props) {
@@ -67,13 +67,13 @@
           h('h1', null,  'counters demo'),
           h('button', {onclick: this.addCounter}, 'Add Counter'),
           this.counters.map(id => (
-            h(Counter, {id, onRemove: this.removeCounter})
+            h(Counter, {key: id, id, onRemove: this.removeCounter})
           ))
         )
       }
     }
 
-    document.body.appendChild(createNode(h(App)))
+    document.body.appendChild(mount(h(App)))
 
   </script>
 </body>

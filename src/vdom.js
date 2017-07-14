@@ -8,7 +8,7 @@ function defShouldUpdate(p1, p2, c1, c2) {
   return false;
 }
 
-export function createNode(c) {
+export function mount(c) {
   var node;
   if (c._text != null) {
     node = document.createTextNode(c._text);
@@ -19,7 +19,7 @@ export function createNode(c) {
       setProps(node, c.props, undefined, c._ctx);
 
       if (!isArray(c.content)) {
-        node.appendChild(createNode(c.content));
+        node.appendChild(mount(c.content));
       } else {
         appendChildren(node, c.content);
       }
@@ -30,7 +30,7 @@ export function createNode(c) {
       );
     } else if (typeof c.type === "function") {
       var vnode = c.type(c.props, c.content);
-      node = createNode(vnode);
+      node = mount(vnode);
       c._data = vnode;
     }
   }
@@ -50,7 +50,7 @@ function appendChildren(
 ) {
   while (start <= end) {
     var ch = children[start++];
-    parent.insertBefore(createNode(ch), beforeNode);
+    parent.insertBefore(mount(ch), beforeNode);
   }
 }
 
@@ -72,12 +72,13 @@ function removeChildren(
   }
 }
 
-function unmount(ch) {
-  if (ch && isComponent(ch.type)) {
-    ch.type.unmount(ch._node);
-  }
-  for (var i = 0; i < ch.content.length; i++) {
-    unmount(ch.content[i]);
+export function unmount(ch) {
+  if (isArray(ch)) {
+    for (var i = 0; i < ch.content.length; i++) {
+      unmount(ch.content[i]);
+    }
+  } else {
+    if (isComponent(ch.type)) ch.type.unmount(ch._node);
   }
 }
 
@@ -139,7 +140,7 @@ export function patch(newch, oldch, parent) {
       throw new Error("Unkown node type! " + type);
     }
   } else {
-    childNode = createNode(newch);
+    childNode = mount(newch);
     if (parent) {
       parent.replaceChild(childNode, oldch._node);
     }
@@ -283,10 +284,7 @@ export function diffChildren(
     return;
   }
   if (newStart === newEnd) {
-    parent.insertBefore(
-      createNode(children[newStart]),
-      oldChildren[oldStart]._node
-    );
+    parent.insertBefore(mount(children[newStart]), oldChildren[oldStart]._node);
     removeChildren(parent, oldChildren, oldStart, oldEnd);
     return;
   }
@@ -551,7 +549,7 @@ function diffOND(
         oldMoved.push(oldMatchIdx);
       }
     } else {
-      node = createNode(ch);
+      node = mount(ch);
     }
     oldCh = oldChildren[oldChIdx];
     parent.insertBefore(node, oldCh ? oldCh._node : null);
@@ -597,7 +595,7 @@ function diffWithMap(
     newStartCh = children[newStart];
     idxInOld = keymap[newStartCh.key];
     if (idxInOld == null) {
-      parent.insertBefore(createNode(newStartCh), oldStartCh._node);
+      parent.insertBefore(mount(newStartCh), oldStartCh._node);
       newStartCh = children[++newStart];
     } else {
       oldCh = oldChildren[idxInOld];
