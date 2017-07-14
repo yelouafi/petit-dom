@@ -34,21 +34,24 @@
     "eslint": "^3.19.0",
     "faucet": "0.0.1",
     "husky": "^0.13.3",
+    "jsdom": "^11.1.0",
     "lint-staged": "^3.4.1",
     "prettier": "^1.5.2",
     "rimraf": "^2.6.1",
     "rollup": "^0.43.0",
     "rollup-plugin-babel": "^2.7.1",
-    "rollup-plugin-uglify": "^2.0.1"
+    "rollup-plugin-uglify": "^2.0.1",
+    "rollup-watch": "^4.3.1",
+    "tape": "^4.7.0"
   },
   "scripts": {
     "precommit": "lint-staged",
     "lint": "eslint src test",
-    "test": "bundlesize",
+    "test": "bundlesize  && babel-node ./test | faucet",
     "check": "npm run lint && npm run test",
     "prepublish": "npm run build",
     "clean": "rimraf dist lib",
-    "build:umd:dev": "rollup -c rollup.config.dev.js",
+    "build:umd:dev": "rollup -w -c rollup.config.dev.js",
     "build:umd:prod": "rollup -c rollup.config.prod.js",
     "build": "npm run clean && npm run build:umd:dev && npm run build:umd:prod"
   },
@@ -64,5 +67,10 @@
       "path": "./dist/petit-dom.min.js",
       "threshold": "4 Kb"
     }
-  ]
+  ],
+  "babel": {
+    "presets": [
+      "es2015"
+    ]
+  }
 }
