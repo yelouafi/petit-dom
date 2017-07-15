@@ -4,9 +4,7 @@ export function h(type, props, contArg) {
   var content;
   var len = arguments.length - 2;
 
-  if (len === 0) {
-    content = EMPTYAR;
-  } else if (len === 1) {
+  if (len === 1) {
     if (isArray(contArg)) {
       content = maybeFlatten(contArg);
     } else if (contArg && contArg._vnode) {
@@ -14,8 +12,14 @@ export function h(type, props, contArg) {
     } else {
       content = [{ _text: contArg == null ? "" : contArg }];
     }
+  } else if (len > 1) {
+    var args = Array(len);
+    for (var i = 0; i < len; i++) {
+      args[i] = arguments[i + 2];
+    }
+    content = maybeFlatten(args);
   } else {
-    content = flattenChildren(arguments, 2, []);
+    content = EMPTYAR;
   }
 
   return {
