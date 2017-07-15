@@ -49,11 +49,15 @@
     "lint": "eslint src test",
     "test": "bundlesize  && babel-node --presets=es2015 ./test | faucet",
     "check": "npm run lint && npm run test",
-    "prepublish": "npm run build",
     "clean": "rimraf dist lib",
     "build:umd:dev": "rollup -c rollup.config.dev.js",
     "build:umd:prod": "rollup -c rollup.config.prod.js",
-    "build": "npm run clean && npm run build:umd:dev && npm run build:umd:prod"
+    "build": "npm run clean && npm run build:umd:dev && npm run build:umd:prod",
+    "prepare": "npm run build",
+    "prerelease": "npm run check && npm run build",
+    "release:patch": "npm run prerelease && npm version patch && git push --follow-tags && npm publish",
+    "release:minor": "npm run prerelease && npm version minor && git push --follow-tags && npm publish",
+    "release:major": "npm run prerelease && npm version major && git push --follow-tags && npm publish"
   },
   "lint-staged": {
     "*.js": [

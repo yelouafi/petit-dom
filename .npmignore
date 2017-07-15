@@ -1,6 +1,6 @@
 # dev-oly folders
-.babelrc
-.eslintrc
+.babelrc*
+.eslintrc*
 .bookignore
 book.json
 test
