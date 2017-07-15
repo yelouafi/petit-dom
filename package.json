@@ -22,9 +22,7 @@
     "virtual dom"
   ],
   "author": "Yassine ELOUAFI <yelouafi@gmail.com>",
-  "dependencies": {
-    "rollup": "^0.43.0"
-  },
+  "dependencies": {},
   "devDependencies": {
     "babel-cli": "^6.24.1",
     "babel-plugin-external-helpers": "^6.22.0",
