@@ -2,9 +2,10 @@
 
 A minimalist virtual DOM library. 
 
-Diff algroithm is based on pre-optimizations at
+Diff algroithm is based on pre-optimizations described at
 https://neil.fraser.name/writing/diff/ and the algorithm presented
-in the paper ["An O(ND) Difference Algorithm and Its Variations](http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.4.6927&rep=rep1&type=pdf)
+in the paper ["An O(ND) Difference Algorithm and Its Variations](http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.4.6927&rep=rep1&type=pdf). There is also [an excellent article](https://www.codeproject.com/Articles/42279/Investigating-Myers-diff-algorithm-Part-of) which explains how the algorithm works. The article includes a GUI application to play
+with the algorithm
 
 
 ## Install
@@ -67,7 +68,7 @@ document.body.appendChild(mount(vnode))
 
 render functions behave like React pure components. Patching with the same
 arguments will not cause any re-rendering. You can also attach a `shouldUpdate`
-function to the render function to customoze the re-rendering behavior (By default
+function to the render function to customize the re-rendering behavior (By default
 props are tested for shallow equality and content is tested for reference equality,
 the lib assumes the same set of keys is provided inside props).
 
