@@ -206,3 +206,77 @@ test("patch keyed children", assert => {
 
   assert.end();
 });
+
+test("patch render functions", assert => {
+  let renderCalls = 0;
+
+  function Box(props, content) {
+    renderCalls++;
+    return h("h1", { title: props.title }, content);
+  }
+
+  const vnode = h(Box, { title: "box title" }, "box content");
+  const node = mount(vnode);
+  assert.equal(renderCalls, 1, "mount should invoke render function");
+  assert.equal(vnode._node, node);
+
+  const vnode2 = h(Box, { title: "another box title" }, "another box content");
+  patch(vnode2, vnode);
+  assert.equal(renderCalls, 2, "patch should invoke render function");
+  assert.equal(vnode2._node, node);
+  assert.equal(node.title, "another box title");
+  assert.equal(node.firstChild.nodeValue, "another box content");
+
+  const vnode3 = h(Box, { title: "another box title" }, "another box content");
+  patch(vnode3, vnode2);
+  assert.equal(
+    renderCalls,
+    2,
+    "patch should not invoke render function if props & content have not changed"
+  );
+  assert.equal(vnode3._node, node);
+  assert.equal(node.title, "another box title");
+  assert.equal(node.firstChild.nodeValue, "another box content");
+
+  assert.end();
+});
+
+test("Patch Component", assert => {
+  let patchCalls = 0;
+
+  const MyComponent = {
+    mount: (props, content) => {
+      var node = document.createElement("my-component");
+      node._payload = [props, content];
+      return node;
+    },
+    patch: (node, props, content) => {
+      patchCalls++;
+      node._payload = [props, content];
+      return node;
+    },
+    unmount: () => {}
+  };
+
+  const vnode = h(
+    MyComponent,
+    { some_prop: "some prop" },
+    { some_cont: "some content" }
+  );
+
+  const node = mount(vnode);
+  assert.equal(vnode._node, node);
+  assert.deepEqual(node._payload, [vnode.props, vnode.content]);
+
+  const vnode2 = h(
+    MyComponent,
+    { some_prop: "another prop" },
+    { some_cont: "another content" }
+  );
+  patch(vnode2, vnode);
+  assert.equal(vnode2._node, node);
+  assert.equal(patchCalls, 1, "patch should invoke Component.patch");
+  assert.deepEqual(node._payload, [vnode2.props, vnode2.content]);
+
+  assert.end();
+});

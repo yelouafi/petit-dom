@@ -64,6 +64,22 @@ test("element with multiple children", assert => {
   assert.end();
 });
 
+test("render functions", assert => {
+  function Box(props, content) {
+    return h("h1", { title: props.title }, content);
+  }
+
+  const vnode = h(Box, { title: "box title" }, "box content");
+  const node = mount(vnode);
+  assert.equal(vnode._node, node);
+
+  assert.equal(node.nodeName, "H1");
+  assert.equal(node.title, "box title");
+  assert.equal(node.childNodes.length, 1);
+  assert.equal(node.firstChild.nodeValue, "box content");
+  assert.end();
+});
+
 test("Component", assert => {
   const MyComponent = {
     mount: (props, content) => {
@@ -83,6 +99,7 @@ test("Component", assert => {
 
   const node = mount(vnode);
   assert.equal(vnode._node, node);
+  assert.equal(node.nodeName, "MY-COMPONENT");
   assert.deepEqual(node._payload, [vnode.props, vnode.content]);
 
   assert.end();

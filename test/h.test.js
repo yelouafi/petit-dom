@@ -181,3 +181,23 @@ test("vnode with nested array content", assert => {
   );
   assert.end();
 });
+
+test("render functions", assert => {
+  function Box(props, content) {
+    return h("h1", { title: props.title }, content);
+  }
+
+  assert.deepEqual(
+    h(Box, { title: "box title" }, "box content"),
+    {
+      _vnode: true,
+      type: Box,
+      key: null,
+      props: { title: "box title" },
+      content: "box content"
+    },
+    "content should not be normalized for render functions"
+  );
+
+  assert.end();
+});
