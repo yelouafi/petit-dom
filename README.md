@@ -57,7 +57,7 @@ function Box(props, content) {
 const vnode = (
   <div>
     <Box title="Fancy box">
-      Put your conten here
+      Put your content here
     </Box>
   </div>
 )
@@ -65,7 +65,7 @@ const vnode = (
 document.body.appendChild(mount(vnode))
 ```
 
-render functions behaves like React pure components. Patching with the same
+render functions behave like React pure components. Patching with the same
 arguments will not cause any re-rendering. You can also attach a `shouldUpdate`
 function to the render function to customoze the re-rendering behavior (By default
 props are tested for shallow equality and content is tested for reference equality,
