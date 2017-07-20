@@ -1,6 +1,6 @@
 # petit-dom
 
-A minimalist DOM library. 
+A minimalist virtual DOM library. 
 
 Diff algroithm is based on pre-optimizations at
 https://neil.fraser.name/writing/diff/ and the algorithm presented
