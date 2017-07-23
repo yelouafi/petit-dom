@@ -83,6 +83,50 @@ test("patch props", assert => {
   assert.end();
 });
 
+test("patch attributes (svg)", assert => {
+  const vnode = h(
+    "div",
+    null,
+    h("span", null, "..."),
+    h("svg", null, h("circle", { cx: 50, cy: 60, r: 30 })),
+    h("span", null, "...")
+  );
+  const node = mount(vnode);
+  let svgCircle = node.childNodes[1].firstChild;
+  assert.equal(svgCircle.getAttribute("cx"), "50");
+  assert.equal(svgCircle.getAttribute("cy"), "60");
+  assert.equal(svgCircle.getAttribute("r"), "30");
+
+  const onclick = () => {};
+  const vnode2 = h(
+    "div",
+    null,
+    h("span", null, "..."),
+    h(
+      "svg",
+      null,
+      h("circle", { cx: 50, cy: 40, stroke: "green", fill: "yellow" })
+    ),
+    h("span", { onclick }, "...")
+  );
+
+  patch(vnode2, vnode);
+  assert.equal(svgCircle.getAttribute("cx"), "50");
+  assert.equal(svgCircle.getAttribute("cy"), "40");
+  assert.equal(svgCircle.getAttribute("stroke"), "green");
+  assert.equal(svgCircle.getAttribute("fill"), "yellow");
+  assert.equal(svgCircle.hasAttribute("r"), false);
+
+  const span = node.childNodes[2];
+  assert.equal(
+    span.onclick,
+    onclick,
+    "should patch props instead of attributes once svg context is off"
+  );
+
+  assert.end();
+});
+
 test("patch non keyed children", assert => {
   const render = s => h("div", null, s.split(""));
 

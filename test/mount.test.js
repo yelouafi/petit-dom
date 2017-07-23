@@ -104,3 +104,61 @@ test("Component", assert => {
 
   assert.end();
 });
+
+test("svg elements", assert => {
+  const onclick = () => {};
+
+  const vnode = h(
+    "div",
+    null,
+    h("span", null, "..."),
+    h(
+      "svg",
+      { width: 100, height: 200 },
+      h("circle", { cx: 50, cy: 60, r: 40 }),
+      h("a", { href: "/link", show: "/link2", actuate: "/link3" })
+    ),
+    h("span", { onclick }, "...")
+  );
+  const node = mount(vnode);
+  assert.equal(node.childNodes.length, 3);
+
+  const svgNode = node.childNodes[1];
+  assert.equal(svgNode.nodeName, "svg");
+  assert.equal(svgNode.namespaceURI, "http://www.w3.org/2000/svg");
+  assert.equal(svgNode.getAttribute("width"), "100");
+  assert.equal(svgNode.getAttribute("height"), "200");
+  assert.equal(svgNode.childNodes.length, 2);
+
+  const svgCircle = svgNode.childNodes[0];
+  assert.equal(svgCircle.nodeName, "circle");
+  assert.equal(svgCircle.namespaceURI, "http://www.w3.org/2000/svg");
+  assert.equal(svgCircle.getAttribute("cx"), "50");
+  assert.equal(svgCircle.getAttribute("cy"), "60");
+  assert.equal(svgCircle.getAttribute("r"), "40");
+
+  const svgA = svgNode.childNodes[1];
+  assert.equal(svgA.nodeName, "a");
+  assert.equal(svgA.namespaceURI, "http://www.w3.org/2000/svg");
+  assert.equal(
+    svgA.getAttributeNS("http://www.w3.org/1999/xlink", "href"),
+    "/link"
+  );
+  assert.equal(
+    svgA.getAttributeNS("http://www.w3.org/1999/xlink", "show"),
+    "/link2"
+  );
+  assert.equal(
+    svgA.getAttributeNS("http://www.w3.org/1999/xlink", "actuate"),
+    "/link3"
+  );
+
+  const span = node.childNodes[2];
+  assert.equal(
+    span.onclick,
+    onclick,
+    "should set props instead of attrs once svg context is off"
+  );
+
+  assert.end();
+});

@@ -1,5 +1,18 @@
 import { isArray, isComponent } from "./utils";
 
+const SVG_NS = "http://www.w3.org/2000/svg";
+
+/**
+  TODO: activate full namespaced attributes (not supported in JSX)
+  const XML_NS = "http://www.w3.org/XML/1998/namespace"
+**/
+const XLINK_NS = "http://www.w3.org/1999/xlink";
+const NS_ATTRS = {
+  show: XLINK_NS,
+  actuate: XLINK_NS,
+  href: XLINK_NS
+};
+
 function defShouldUpdate(p1, p2, c1, c2) {
   if (c1 !== c2) return true;
   for (var key in p1) {
@@ -8,21 +21,32 @@ function defShouldUpdate(p1, p2, c1, c2) {
   return false;
 }
 
+var isSVG = false;
 export function mount(c) {
-  var node;
+  var node,
+    prevIsSVG = isSVG;
   if (c._text != null) {
     node = document.createTextNode(c._text);
   } else if (c._vnode) {
     if (typeof c.type === "string") {
+      if (c.type === "svg") {
+        isSVG = true;
+      }
       // TODO : non HTML namespaces + {is} for custom elements
-      node = document.createElement(c.type);
-      setProps(node, c.props, undefined, c._ctx);
+      if (!isSVG) {
+        node = document.createElement(c.type);
+        setProps(node, c.props, undefined);
+      } else {
+        node = document.createElementNS(SVG_NS, c.type);
+        setAttributes(node, c.props, undefined);
+      }
 
       if (!isArray(c.content)) {
         node.appendChild(mount(c.content));
       } else {
         appendChildren(node, c.content);
       }
+      isSVG = prevIsSVG;
     } else if (isComponent(c.type)) {
       node = c.type.mount(c.props, c.content);
     } else if (typeof c.type === "function") {
@@ -81,19 +105,49 @@ export function unmount(ch) {
   }
 }
 
-function setProps(el, props, oldProps, ctx) {
+function setProps(el, props, oldProps) {
   for (var key in props) {
     var oldv = oldProps && oldProps[key];
     var newv = props[key];
     if (oldv !== newv) {
-      el[key] =
-        typeof newv === "function" && ctx !== undefined ? newv.bind(ctx) : newv;
+      el[key] = newv;
+    }
+  }
+}
+
+function setAttributes(el, attrs, oldAttrs) {
+  for (var key in attrs) {
+    var oldv = oldAttrs != null ? oldAttrs[key] : undefined;
+    var newv = attrs[key];
+    if (oldv !== newv) {
+      setDOMAttr(el, key, newv);
+    }
+  }
+  for (key in oldAttrs) {
+    if (!(key in attrs)) {
+      el.removeAttribute(key);
+    }
+  }
+}
+
+function setDOMAttr(el, attr, value) {
+  if (value === true) {
+    el.setAttribute(attr, "");
+  } else if (value === false) {
+    el.removeAttribute(attr);
+  } else {
+    var ns = NS_ATTRS[attr];
+    if (ns !== undefined) {
+      el.setAttributeNS(ns, attr, value);
+    } else {
+      el.setAttribute(attr, value);
     }
   }
 }
 
 export function patch(newch, oldch, parent) {
   var childNode = oldch._node;
+  var prevIsSVG = isSVG;
 
   if (oldch === newch) {
     return childNode;
@@ -120,7 +174,14 @@ export function patch(newch, oldch, parent) {
         newch._data = oldch._data;
       }
     } else if (typeof type === "string") {
-      setProps(childNode, newch.props, oldch.props, newch._ctx);
+      if (type === "svg") {
+        isSVG = true;
+      }
+      if (!isSVG) {
+        setProps(childNode, newch.props, oldch.props);
+      } else {
+        setAttributes(childNode, newch.props, oldch.props);
+      }
 
       if (!isArray(oldch.content) && !isArray(newch.content)) {
         if (oldch.content !== newch.content) {
@@ -132,6 +193,7 @@ export function patch(newch, oldch, parent) {
         removeChildren(childNode, oldch.content, 0, oldch.content.length - 1);
         appendChildren(childNode, newch);
       }
+      isSVG = prevIsSVG;
     } else {
       throw new Error("Unkown node type! " + type);
     }
