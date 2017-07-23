@@ -32,7 +32,7 @@ export function mount(c) {
       if (c.type === "svg") {
         isSVG = true;
       }
-      // TODO : non HTML namespaces + {is} for custom elements
+      // TODO : {is} for custom elements
       if (!isSVG) {
         node = document.createElement(c.type);
         setProps(node, c.props, undefined);
