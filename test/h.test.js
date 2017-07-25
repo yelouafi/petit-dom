@@ -5,6 +5,7 @@ import { EMPTYO, EMPTYAR } from "../src/utils";
 test("empty vnode", assert => {
   assert.deepEqual(h("div"), {
     _vnode: true,
+    isSVG: false,
     type: "div",
     key: null,
     props: EMPTYO,
@@ -16,6 +17,7 @@ test("empty vnode", assert => {
 test("empty vnode with props", assert => {
   assert.deepEqual(h("div", { className: "test", key: "key" }), {
     _vnode: true,
+    isSVG: false,
     type: "div",
     key: "key",
     props: { className: "test", key: "key" },
@@ -27,6 +29,7 @@ test("empty vnode with props", assert => {
 test("vnode with text content", assert => {
   assert.deepEqual(h("div", null, "text content"), {
     _vnode: true,
+    isSVG: false,
     type: "div",
     key: null,
     props: EMPTYO,
@@ -34,6 +37,7 @@ test("vnode with text content", assert => {
   });
   assert.deepEqual(h("div", null, null), {
     _vnode: true,
+    isSVG: false,
     type: "div",
     key: null,
     props: EMPTYO,
@@ -45,12 +49,14 @@ test("vnode with text content", assert => {
 test("vnode with single vnode content", assert => {
   assert.deepEqual(h("div", null, h("span", null, "span text")), {
     _vnode: true,
+    isSVG: false,
     type: "div",
     key: null,
     props: EMPTYO,
     content: [
       {
         _vnode: true,
+        isSVG: false,
         type: "span",
         key: null,
         props: EMPTYO,
@@ -73,12 +79,14 @@ test("vnode with multiple vnode contents", assert => {
     ),
     {
       _vnode: true,
+      isSVG: false,
       type: "div",
       key: null,
       props: EMPTYO,
       content: [
         {
           _vnode: true,
+          isSVG: false,
           type: "span",
           key: null,
           props: EMPTYO,
@@ -86,6 +94,7 @@ test("vnode with multiple vnode contents", assert => {
         },
         {
           _vnode: true,
+          isSVG: false,
           type: "input",
           key: null,
           props: { type: "number" },
@@ -108,12 +117,14 @@ test("vnode with single array content", assert => {
     ]),
     {
       _vnode: true,
+      isSVG: false,
       type: "div",
       key: null,
       props: EMPTYO,
       content: [
         {
           _vnode: true,
+          isSVG: false,
           type: "span",
           key: null,
           props: EMPTYO,
@@ -121,6 +132,7 @@ test("vnode with single array content", assert => {
         },
         {
           _vnode: true,
+          isSVG: false,
           type: "input",
           key: null,
           props: { type: "number" },
@@ -136,12 +148,14 @@ test("vnode with single array content", assert => {
 test("vnode with nested array content", assert => {
   const expected = {
     _vnode: true,
+    isSVG: false,
     type: "div",
     key: null,
     props: EMPTYO,
     content: [
       {
         _vnode: true,
+        isSVG: false,
         type: "span",
         key: null,
         props: EMPTYO,
@@ -150,6 +164,7 @@ test("vnode with nested array content", assert => {
       { _text: "A" },
       {
         _vnode: true,
+        isSVG: false,
         type: "input",
         key: null,
         props: EMPTYO,
@@ -191,6 +206,7 @@ test("render functions", assert => {
     h(Box, { title: "box title" }, "box content"),
     {
       _vnode: true,
+      isSVG: false,
       type: Box,
       key: null,
       props: { title: "box title" },

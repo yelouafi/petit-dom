@@ -1,7 +1,8 @@
 import { isArray, isComponent } from "./utils";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
-
+const SELECT = "select";
+const SELECT_DELAYED_PROPS = { selectedIndex: true };
 /**
   TODO: activate full namespaced attributes (not supported in JSX)
   const XML_NS = "http://www.w3.org/XML/1998/namespace"
@@ -21,36 +22,63 @@ function defShouldUpdate(p1, p2, c1, c2) {
   return false;
 }
 
-var isSVG = false;
+function mountSelect(props, children) {
+  const node = document.createElement(SELECT);
+  const isMultiple = props.multiple;
+  const hasSelIndex = props.selectedIndex != null;
+  const ignoreKeys = hasSelIndex ? SELECT_DELAYED_PROPS : null;
+  setProps(node, props, null, ignoreKeys);
+  appendChildren(node, children);
+  if (hasSelIndex && !isMultiple) {
+    node.selectedIndex = props.selectedIndex;
+  }
+  return node;
+}
+
+function patchSelect(node, props, content, oldProps, oldContent) {
+  const isMultiple = props.multiple;
+  const hasSelIndex = props.selectedIndex != null;
+  const ignoreKeys = hasSelIndex ? SELECT_DELAYED_PROPS : null;
+  setProps(node, props, oldProps, ignoreKeys);
+  patchContent(node, content, oldContent);
+  if (
+    hasSelIndex &&
+    !isMultiple &&
+    props.selectedIndex !== oldProps.selectedIndex
+  ) {
+    node.selectedIndex = props.selectedIndex;
+  }
+}
+
 export function mount(c) {
-  var node,
-    prevIsSVG = isSVG;
+  var node;
   if (c._text != null) {
     node = document.createTextNode(c._text);
   } else if (c._vnode) {
-    if (typeof c.type === "string") {
-      if (c.type === "svg") {
-        isSVG = true;
-      }
-      // TODO : {is} for custom elements
-      if (!isSVG) {
-        node = document.createElement(c.type);
-        setProps(node, c.props, undefined);
+    const { type, props, content, isSVG } = c;
+    if (typeof type === "string") {
+      const isSelect = !isSVG && type.length === 6 && type === SELECT;
+      if (isSelect) {
+        node = mountSelect(props, content);
       } else {
-        node = document.createElementNS(SVG_NS, c.type);
-        setAttributes(node, c.props, undefined);
+        // TODO : {is} for custom elements
+        if (!isSVG) {
+          node = document.createElement(type);
+          setProps(node, props, undefined);
+        } else {
+          node = document.createElementNS(SVG_NS, type);
+          setAttributes(node, props, undefined);
+        }
+        if (!isArray(content)) {
+          node.appendChild(mount(content));
+        } else {
+          appendChildren(node, content);
+        }
       }
-
-      if (!isArray(c.content)) {
-        node.appendChild(mount(c.content));
-      } else {
-        appendChildren(node, c.content);
-      }
-      isSVG = prevIsSVG;
-    } else if (isComponent(c.type)) {
-      node = c.type.mount(c.props, c.content);
-    } else if (typeof c.type === "function") {
-      var vnode = c.type(c.props, c.content);
+    } else if (isComponent(type)) {
+      node = type.mount(props, content);
+    } else if (typeof type === "function") {
+      var vnode = type(props, content);
       node = mount(vnode);
       c._data = vnode;
     }
@@ -105,8 +133,9 @@ export function unmount(ch) {
   }
 }
 
-function setProps(el, props, oldProps) {
+function setProps(el, props, oldProps, ignoreKeys) {
   for (var key in props) {
+    if (ignoreKeys != null && ignoreKeys[key] === true) continue;
     var oldv = oldProps && oldProps[key];
     var newv = props[key];
     if (oldv !== newv) {
@@ -147,7 +176,6 @@ function setDOMAttr(el, attr, value) {
 
 export function patch(newch, oldch, parent) {
   var childNode = oldch._node;
-  var prevIsSVG = isSVG;
 
   if (oldch === newch) {
     return childNode;
@@ -158,8 +186,8 @@ export function patch(newch, oldch, parent) {
     if (t1 !== t2) {
       childNode.nodeValue = t2;
     }
-  } else if (oldch.type === newch.type) {
-    const type = oldch.type;
+  } else if (oldch.type === newch.type && oldch.isSVG === newch.isSVG) {
+    const { type, isSVG } = oldch;
     if (isComponent(type)) {
       type.patch(childNode, newch.props, newch.content);
     } else if (typeof type === "function") {
@@ -174,26 +202,23 @@ export function patch(newch, oldch, parent) {
         newch._data = oldch._data;
       }
     } else if (typeof type === "string") {
-      if (type === "svg") {
-        isSVG = true;
-      }
-      if (!isSVG) {
-        setProps(childNode, newch.props, oldch.props);
+      const isSelect = !isSVG && type.length === 6 && type === SELECT;
+      if (isSelect) {
+        patchSelect(
+          childNode,
+          newch.props,
+          newch.content,
+          oldch.props,
+          oldch.content
+        );
       } else {
-        setAttributes(childNode, newch.props, oldch.props);
-      }
-
-      if (!isArray(oldch.content) && !isArray(newch.content)) {
-        if (oldch.content !== newch.content) {
-          patch(newch.content, oldch.content, childNode);
+        if (!isSVG) {
+          setProps(childNode, newch.props, oldch.props);
+        } else {
+          setAttributes(childNode, newch.props, oldch.props);
         }
-      } else if (isArray(oldch.content) && isArray(newch.content)) {
-        diffChildren(childNode, newch.content, oldch.content);
-      } else {
-        removeChildren(childNode, oldch.content, 0, oldch.content.length - 1);
-        appendChildren(childNode, newch);
+        patchContent(childNode, newch.content, oldch.content);
       }
-      isSVG = prevIsSVG;
     } else {
       throw new Error("Unkown node type! " + type);
     }
@@ -206,6 +231,19 @@ export function patch(newch, oldch, parent) {
 
   newch._node = childNode;
   return childNode;
+}
+
+function patchContent(parent, content, oldContent) {
+  if (!isArray(content) && !isArray(oldContent)) {
+    if (content !== oldContent) {
+      patch(content, oldContent, parent);
+    }
+  } else if (isArray(content) && isArray(oldContent)) {
+    diffChildren(parent, content, oldContent);
+  } else {
+    removeChildren(parent, oldContent, 0, oldContent.length - 1);
+    appendChildren(parent, content);
+  }
 }
 
 function canPatch(v1, v2) {

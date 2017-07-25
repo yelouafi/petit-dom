@@ -4,6 +4,7 @@ const { JSDOM } = jsdom;
 const { document } = new JSDOM(`<!DOCTYPE html><body></body>`).window;
 global.document = document;
 
-require("./h.test");
-require("./mount.test");
-require("./patch.test");
+import "./h.test";
+import "./mount.test";
+import "./patch.test";
+import "./select.test.js";
