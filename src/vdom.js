@@ -22,32 +22,29 @@ function defShouldUpdate(p1, p2, c1, c2) {
   return false;
 }
 
-function mountSelect(props, children) {
-  const node = document.createElement(SELECT);
-  const isMultiple = props.multiple;
+function updateSelect(node, props, children, oldProps, oldChildren) {
+  const isMount = oldProps == null;
   const hasSelIndex = props.selectedIndex != null;
-  const ignoreKeys = hasSelIndex ? SELECT_DELAYED_PROPS : null;
+  const hasValue = !hasSelIndex && "value" in props;
+  const ignoreKeys = hasSelIndex || hasValue ? SELECT_DELAYED_PROPS : null;
   setProps(node, props, null, ignoreKeys);
-  appendChildren(node, children);
-  if (hasSelIndex && !isMultiple) {
-    node.selectedIndex = props.selectedIndex;
+  if (isMount) {
+    appendChildren(node, children);
+  } else {
+    patchContent(node, children, oldChildren);
+  }
+  if (!props.multiple) {
+    if (hasSelIndex) {
+      if (isMount || props.selectedIndex !== oldProps.selectedIndex) {
+        node.selectedIndex = props.selectedIndex;
+      }
+    } else if (hasValue) {
+      if (isMount || props.value !== oldProps.value) {
+        node.value = props.value;
+      }
+    }
   }
   return node;
-}
-
-function patchSelect(node, props, content, oldProps, oldContent) {
-  const isMultiple = props.multiple;
-  const hasSelIndex = props.selectedIndex != null;
-  const ignoreKeys = hasSelIndex ? SELECT_DELAYED_PROPS : null;
-  setProps(node, props, oldProps, ignoreKeys);
-  patchContent(node, content, oldContent);
-  if (
-    hasSelIndex &&
-    !isMultiple &&
-    props.selectedIndex !== oldProps.selectedIndex
-  ) {
-    node.selectedIndex = props.selectedIndex;
-  }
 }
 
 export function mount(c) {
@@ -59,7 +56,8 @@ export function mount(c) {
     if (typeof type === "string") {
       const isSelect = !isSVG && type.length === 6 && type === SELECT;
       if (isSelect) {
-        node = mountSelect(props, content);
+        node = document.createElement(type);
+        updateSelect(node, props, content);
       } else {
         // TODO : {is} for custom elements
         if (!isSVG) {
@@ -204,7 +202,7 @@ export function patch(newch, oldch, parent) {
     } else if (typeof type === "string") {
       const isSelect = !isSVG && type.length === 6 && type === SELECT;
       if (isSelect) {
-        patchSelect(
+        updateSelect(
           childNode,
           newch.props,
           newch.content,
