@@ -29,7 +29,7 @@ test("select with options (single selection)", assert => {
 
   const vnode2 = h(
     "select",
-    { selectedIndex: 0 },
+    { value: "eat" },
     h("option", { value: "eat" }, "Eat"),
     h("option", { value: "pray" }, "Pray"),
     h("option", { value: "love", selected: true }, "Love")
