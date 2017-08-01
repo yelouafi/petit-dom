@@ -184,66 +184,50 @@ test("patch keyed children", assert => {
   const render = str =>
     h("div", null, str.split("").map(c => h("span", { key: c }, c)));
 
-  const markWithTransientState = (vnode, version) => {
-    // mark all nodes with transient state before patching
-    // We want to make sure patch preserve keyed children' transient state
-    for (var i = 0; i < vnode.content.length; i++) {
-      const ch = vnode.content[i];
-      ch._version = `${ch.key}${version}`;
-      ch._node._version = ch.version;
-    }
-  };
-
-  let vnode2,
-    vnode,
-    node,
-    version = 0;
-
-  vnode = render("");
-  node = mount(vnode);
+  let prevVNode,
+    vnode = render(""),
+    node = mount(vnode);
 
   function testPatch(s, message) {
     assert.test(message, assert => {
-      vnode2 = render(s);
-      markWithTransientState(vnode, ++version);
-      patch(vnode2, vnode);
-      vnode = vnode2;
+      prevVNode = vnode;
+      vnode = render(s);
 
-      assert.plan(vnode.content.length * 4 + 1);
+      const findOldByKey = key => prevVNode.content.find(vn => vn.key === key);
+
+      patch(vnode, prevVNode);
+
+      assert.plan(vnode.content.length * 2 + 1);
       assert.equal(node.childNodes.length, vnode.content.length);
 
       for (var i = 0; i < vnode.content.length; i++) {
         const ch = vnode.content[i];
         const childNode = node.childNodes[i];
-
-        assert.equal(childNode.tagName, "SPAN", "tag name should be span");
         assert.equal(
-          childNode.childNodes.length,
-          1,
-          "should have one child node"
+          childNode,
+          ch._node,
+          ch.key + " should match real DOM node"
         );
-        assert.equal(
-          childNode.firstChild.nodeValue,
-          ch.content[0]._text,
-          "should match text content"
-        );
-        assert.equal(
-          childNode._version,
-          ch.version,
-          "should preserve transcient version"
-        );
+        const oldVNode = findOldByKey(ch.key);
+        if (oldVNode != null) {
+          assert.equal(oldVNode._node, ch._node, "should preserve DOM node");
+        } else {
+          assert.ok(true, "new node");
+        }
       }
     });
   }
 
   testPatch("36", "append to an empty sequence");
   testPatch("3678", "append");
+  testPatch("7836", "reorder");
+  testPatch("3678", "reorde(2)");
   testPatch("123678", "prepend");
   testPatch("12345678", "insert in the middle");
   testPatch("A0123456789B", "append + prepend");
   testPatch("12345678", "remove from edges");
   testPatch("123678", "remove from middle");
-  testPatch("2x3y67z8", "multiple modificationq");
+  testPatch("2x3y67z8", "multiple modifications");
   testPatch(shuffle("2x3y67z8".split("")).join(""), "shuffle");
   testPatch("ABCDEF", "replace all");
   testPatch("", "clear");
