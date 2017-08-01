@@ -227,8 +227,8 @@ test("patch keyed children", assert => {
   testPatch("A0123456789B", "append + prepend");
   testPatch("12345678", "remove from edges");
   testPatch("123678", "remove from middle");
-  testPatch("2x3y67z8", "multiple modifications");
-  testPatch(shuffle("2x3y67z8".split("")).join(""), "shuffle");
+  testPatch("2x6y37z8", "multiple modifications");
+  testPatch(shuffle("2x6y37z8".split("")).join(""), "shuffle");
   testPatch("ABCDEF", "replace all");
   testPatch("", "clear");
 

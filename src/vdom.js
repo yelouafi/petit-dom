@@ -669,7 +669,7 @@ function diffOND(
       oldChIdx++;
     } else if (op === DELETION) {
       oldCh = oldChildren[oldChIdx++];
-      if (oldCh.key == null || moveMap[ch.key] == null) {
+      if (oldCh.key == null || moveMap[oldCh.key] == null) {
         parent.removeChild(oldCh._node);
         unmount(oldCh);
       }
