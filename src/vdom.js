@@ -477,7 +477,7 @@ function diffCommonPrefix(s1, s2, start1, end1, start2, end2, eq, parent) {
     start2 <= end2 &&
     eq((c1 = s1[start1]), (c2 = s2[start2]))
   ) {
-    if (parent) patch(c1, c2);
+    if (parent) patch(c1, c2, parent);
     start1++;
     start2++;
     k++;
@@ -494,7 +494,7 @@ function diffCommonSufffix(s1, s2, start1, end1, start2, end2, eq, parent) {
     start2 <= end2 &&
     eq((c1 = s1[end1]), (c2 = s2[end2]))
   ) {
-    if (parent) patch(c1, c2);
+    if (parent) patch(c1, c2, parent);
     end1--;
     end2--;
     k++;
