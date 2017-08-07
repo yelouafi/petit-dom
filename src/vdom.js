@@ -596,22 +596,18 @@ function diffOND(
     }
   }
 
-  var diff = [],
-    deleteMap = {},
-    moveMap = {};
-  var ch, oldCh;
-
+  var diff = Array(d / 2 + dmax / 2);
+  var deleteMap = {};
+  var oldCh;
+  var diffIdx = diff.length - 1;
   for (d = v.length - 1; d >= 0; d--) {
     while (
       c > 0 &&
       r > 0 &&
-      canPatch(
-        (oldCh = oldChildren[oldStart + c - 1]),
-        (ch = children[newStart + r - 1])
-      )
+      canPatch(oldChildren[oldStart + c - 1], children[newStart + r - 1])
     ) {
       // diagonal edge = equality
-      diff.push(PATCH);
+      diff[diffIdx--] = PATCH;
       c--;
       r--;
     }
@@ -622,23 +618,36 @@ function diffOND(
     if (k === -d || (k !== d && pv[pd + k - 1] < pv[pd + k + 1])) {
       // vertical edge = insertion
       r--;
-      diff.push(INSERTION);
+      diff[diffIdx--] = INSERTION;
     } else {
       // horizontal edge = deletion
       c--;
-      diff.push(DELETION);
+      diff[diffIdx--] = DELETION;
       oldCh = oldChildren[oldStart + c];
       if (oldCh.key != null) {
         deleteMap[oldCh.key] = oldStart + c;
       }
     }
   }
-  var node, oldMatchIdx;
-  for (
-    var i = diff.length - 1, chIdx = newStart, oldChIdx = oldStart;
-    i >= 0;
-    i--
-  ) {
+
+  applyDiff(parent, diff, children, oldChildren, newStart, oldStart, deleteMap);
+}
+
+function applyDiff(
+  parent,
+  diff,
+  children,
+  oldChildren,
+  newStart,
+  oldStart,
+  deleteMap
+) {
+  var ch,
+    oldCh,
+    node,
+    oldMatchIdx,
+    moveMap = {};
+  for (var i = 0, chIdx = newStart, oldChIdx = oldStart; i < diff.length; i++) {
     const op = diff[i];
     if (op === PATCH) {
       patch(children[chIdx++], oldChildren[oldChIdx++], parent);
@@ -663,7 +672,7 @@ function diffOND(
     }
   }
 
-  for (i = diff.length - 1, oldChIdx = oldStart; i >= 0; i--) {
+  for (i = 0, oldChIdx = oldStart; i < diff.length; i++) {
     const op = diff[i];
     if (op === PATCH) {
       oldChIdx++;
@@ -677,6 +686,13 @@ function diffOND(
   }
 }
 
+/**
+  A simplified implementation of Hunt-Szymanski algorithm
+  see "A Fast Algorithm for Computing Longest Common Subsequences"
+  http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.608.1614&rep=rep1&type=pdf
+  This implementation supposes keys are unique so we only use 
+  simple object maps to build the match list
+**/
 function diffWithMap(
   parent,
   children,
@@ -687,40 +703,90 @@ function diffWithMap(
   oldEnd
 ) {
   var keymap = {},
+    unkeyed = [],
+    idxUnkeyed = 0,
+    ch,
     oldCh,
-    node,
+    k,
     idxInOld,
     key;
-  for (var i = oldStart; i <= oldEnd; i++) {
+
+  var newLen = newEnd - newStart + 1;
+  var oldLen = oldEnd - oldStart + 1;
+  var minLen = Math.min(newLen, oldLen);
+  var tresh = Array(minLen + 1);
+  tresh[0] = -1;
+
+  for (var i = 1; i < tresh.length; i++) {
+    tresh[i] = oldEnd + 1;
+  }
+  var link = Array(minLen);
+
+  for (i = oldStart; i <= oldEnd; i++) {
     oldCh = oldChildren[i];
     key = oldCh.key;
     if (key != null) {
       keymap[key] = i;
-    }
-  }
-  var oldStartCh, newStartCh;
-  while (oldStart <= oldEnd && newStart <= newEnd) {
-    oldStartCh = oldChildren[oldStart];
-    newStartCh = children[newStart];
-    idxInOld = keymap[newStartCh.key];
-    if (idxInOld == null) {
-      parent.insertBefore(mount(newStartCh), oldStartCh._node);
-      newStartCh = children[++newStart];
     } else {
-      oldCh = oldChildren[idxInOld];
-      node = patch(newStartCh, oldCh);
-      oldCh[idxInOld] = undefined;
-      parent.insertBefore(node, oldStartCh._node);
-      newStartCh = children[++newStart];
+      unkeyed.push(oldCh);
     }
   }
-  if (oldStart > oldEnd) {
-    var before =
-      children[newEnd + 1] == null ? null : children[newEnd + 1]._node;
-    appendChildren(parent, children, newStart, newEnd, before);
-  } else if (newStart > newEnd) {
-    removeChildren(parent, oldChildren, oldStart, oldEnd);
+
+  for (i = newStart; i <= newEnd; i++) {
+    ch = children[i];
+    idxInOld = ch.key == null ? unkeyed[idxUnkeyed++] : keymap[ch.key];
+    if (idxInOld != null) {
+      k = findK(tresh, idxInOld);
+      if (k >= 0) {
+        tresh[k] = idxInOld;
+        link[k] = { newi: i, oldi: idxInOld, prev: link[k - 1] };
+      }
+    }
   }
+
+  k = tresh.length - 1;
+  while (tresh[k] > oldEnd) k--;
+
+  var ptr = link[k];
+  var diff = Array(oldLen + newLen - k);
+  var curNewi = newEnd,
+    curOldi = oldEnd;
+  var d = diff.length - 1;
+  while (ptr) {
+    const { newi, oldi } = ptr;
+    while (curNewi > newi) {
+      diff[d--] = INSERTION;
+      curNewi--;
+    }
+    while (curOldi > oldi) {
+      diff[d--] = DELETION;
+      curOldi--;
+    }
+    diff[d--] = PATCH;
+    curNewi--;
+    curOldi--;
+    ptr = ptr.prev;
+  }
+  while (curNewi >= newStart) {
+    diff[d--] = INSERTION;
+    curNewi--;
+  }
+  while (curOldi >= oldStart) {
+    diff[d--] = DELETION;
+    curOldi--;
+  }
+  applyDiff(parent, diff, children, oldChildren, newStart, oldStart, keymap);
+}
+
+function findK(ktr, j) {
+  var lo = 1;
+  var hi = ktr.length - 1;
+  while (lo <= hi) {
+    var mid = Math.ceil((lo + hi) / 2);
+    if (j < ktr[mid]) hi = mid - 1;
+    else lo = mid + 1;
+  }
+  return lo;
 }
 
 function indexOf(a, suba, aStart, aEnd, subaStart, subaEnd, eq) {
