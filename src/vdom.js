@@ -728,7 +728,7 @@ function diffWithMap(
     if (key != null) {
       keymap[key] = i;
     } else {
-      unkeyed.push(oldCh);
+      unkeyed.push(i);
     }
   }
 
