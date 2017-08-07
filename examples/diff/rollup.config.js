@@ -1,7 +1,7 @@
 import babel from "rollup-plugin-babel";
 
 export default {
-  entry: "src/main.js",
+  entry: "src/index.js",
   dest: "dist/build.js",
   format: "iife",
   sourceMap: "inline",
