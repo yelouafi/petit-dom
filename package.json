@@ -1,6 +1,6 @@
 {
   "name": "petit-dom",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "description": "Minimalist virtual dom library",
   "main": "dist/petit-dom.min.js",
   "jsnext:main": "src/index.js",
