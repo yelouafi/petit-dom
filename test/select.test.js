@@ -142,11 +142,23 @@ test("select with multiple = true", assert => {
     h("option", { value: "love", selected: false }, "Love")
   );
   patch(vnode2, vnode);
-  /** JSDOM bug?? inbrowser tests are ok
-  assert.equal(node.selectedOptions.length, 2,'number of selected options should be 2')
-  assert.equal(node.selectedOptions[0], node.options[0],'should select options[0]')
-  assert.equal(node.selectedOptions[1], node.options[1],'should select options[1]')
-  */
+
+  assert.equal(
+    node.selectedOptions.length,
+    2,
+    "number of selected options should be 2"
+  );
+  assert.equal(
+    node.selectedOptions[0],
+    node.options[0],
+    "should select options[0]"
+  );
+  assert.equal(
+    node.selectedOptions[1],
+    node.options[1],
+    "should select options[1]"
+  );
+
   assert.equal(node.options[0].selected, true, "option 0 should be selected");
   assert.equal(node.options[1].selected, true, "option 1 should be selected");
   assert.equal(

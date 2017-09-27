@@ -3,6 +3,8 @@ import { isArray, isComponent } from "./utils";
 const SVG_NS = "http://www.w3.org/2000/svg";
 const SELECT = "select";
 const SELECT_DELAYED_PROPS = { selectedIndex: true };
+const INPUT = "input";
+const INPUT_DELAYED_PROPS = { type: true, value: true };
 /**
   TODO: activate full namespaced attributes (not supported in JSX)
   const XML_NS = "http://www.w3.org/XML/1998/namespace"
@@ -47,6 +49,23 @@ function updateSelect(node, props, children, oldProps, oldChildren) {
   return node;
 }
 
+function updateInput(node, props, oldProps) {
+  const isMount = oldProps == null;
+  const hasValue = props.value != null;
+
+  const ignoreKeys = hasValue ? INPUT_DELAYED_PROPS : null;
+  if (props.type != null && (isMount || props.type !== oldProps.type)) {
+    node.type = props.type;
+  }
+
+  setProps(node, props, null, ignoreKeys);
+
+  if (hasValue && (isMount || props.value !== oldProps.value)) {
+    node.value = props.value;
+  }
+  return node;
+}
+
 export function mount(c) {
   var node;
   if (c._text != null) {
@@ -54,10 +73,19 @@ export function mount(c) {
   } else if (c._vnode) {
     const { type, props, content, isSVG } = c;
     if (typeof type === "string") {
-      const isSelect = !isSVG && type.length === 6 && type === SELECT;
+      const isSelect =
+        !isSVG && type.length === 6 && type.toLowerCase() === SELECT;
+      const isInput =
+        !isSelect &&
+        !isSVG &&
+        type.length === 5 &&
+        type.toLowerCase() === INPUT;
       if (isSelect) {
         node = document.createElement(type);
         updateSelect(node, props, content);
+      } else if (isInput) {
+        node = document.createElement(type);
+        updateInput(node, props);
       } else {
         // TODO : {is} for custom elements
         if (!isSVG) {
@@ -201,6 +229,11 @@ export function patch(newch, oldch, parent) {
       }
     } else if (typeof type === "string") {
       const isSelect = !isSVG && type.length === 6 && type === SELECT;
+      const isInput =
+        !isSelect &&
+        !isSVG &&
+        type.length === 5 &&
+        type.toLowerCase() === INPUT;
       if (isSelect) {
         updateSelect(
           childNode,
@@ -209,6 +242,8 @@ export function patch(newch, oldch, parent) {
           oldch.props,
           oldch.content
         );
+      } else if (isInput) {
+        updateInput(childNode, newch.props, oldch.props);
       } else {
         if (!isSVG) {
           setProps(childNode, newch.props, oldch.props);
