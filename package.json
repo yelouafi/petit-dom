@@ -32,7 +32,7 @@
     "eslint": "^3.19.0",
     "faucet": "0.0.1",
     "husky": "^0.13.3",
-    "jsdom": "^11.1.0",
+    "jsdom": "^11.2.0",
     "lint-staged": "^3.4.1",
     "prettier": "^1.5.2",
     "rimraf": "^2.6.1",
