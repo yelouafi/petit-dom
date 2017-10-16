@@ -215,11 +215,17 @@ export function patch(newch, oldch, parent) {
   } else if (oldch.type === newch.type && oldch.isSVG === newch.isSVG) {
     const { type, isSVG } = oldch;
     if (isComponent(type)) {
-      type.patch(childNode, newch.props, newch.content);
+      type.patch(
+        childNode,
+        newch.props,
+        oldch.props,
+        newch.content,
+        oldch.content
+      );
     } else if (typeof type === "function") {
       var shouldUpdateFn = type.shouldUpdate || defShouldUpdate;
       if (
-        shouldUpdateFn(oldch.props, newch.props, oldch.content, newch.content)
+        shouldUpdateFn(newch.props, oldch.props, newch.content, oldch.content)
       ) {
         var vnode = type(newch.props, newch.content);
         childNode = patch(vnode, oldch._data, parent);
