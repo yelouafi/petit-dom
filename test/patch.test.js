@@ -278,9 +278,11 @@ test("Patch Component", assert => {
       node._payload = [props, content];
       return node;
     },
-    patch: (node, props, content) => {
+    patch: (node, props, oldProps, content, oldContent) => {
       patchCalls++;
       node._payload = [props, content];
+      assert.deepEqual(oldProps, vnode.props);
+      assert.deepEqual(oldContent, vnode.content);
       return node;
     },
     unmount: () => {}
