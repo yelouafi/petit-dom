@@ -70,7 +70,7 @@ export function mount(c) {
   var node;
   if (c._text != null) {
     node = document.createTextNode(c._text);
-  } else if (c._vnode) {
+  } else if (c._vnode === true) {
     const { type, props, content, isSVG } = c;
     if (typeof type === "string") {
       const isSelect =
@@ -152,10 +152,12 @@ export function unmount(ch) {
     for (var i = 0; i < ch.length; i++) {
       unmount(ch[i]);
     }
-  } else if (isComponent(ch.type)) {
-    ch.type.unmount(ch._node);
-  } else if (ch && ch._vnode) {
-    unmount(ch.content);
+  } else if (ch._vnode === true) {
+    if (isComponent(ch.type)) {
+      ch.type.unmount(ch._node);
+    } else if (ch.content != null) {
+      unmount(ch.content);
+    }
   }
 }
 
