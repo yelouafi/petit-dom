@@ -104,9 +104,15 @@ export function mount(c) {
     } else if (isComponent(type)) {
       node = type.mount(props, content);
     } else if (typeof type === "function") {
-      var vnode = type(props, content);
-      node = mount(vnode);
-      c._data = vnode;
+      if (isComponent(type.prototype)) {
+        var instance = new type(props, content);
+        node = instance.mount(props, content);
+        c._data = instance;
+      } else {
+        var vnode = type(props, content);
+        node = mount(vnode);
+        c._data = vnode;
+      }
     }
   }
   if (node == null) {
@@ -155,6 +161,11 @@ export function unmount(ch) {
   } else if (ch._vnode === true) {
     if (isComponent(ch.type)) {
       ch.type.unmount(ch._node);
+    } else if (
+      typeof ch.type === "function" &&
+      isComponent(ch.type.prototype)
+    ) {
+      ch._data.unmount(ch._node);
     } else if (ch.content != null) {
       unmount(ch.content);
     }
@@ -225,15 +236,27 @@ export function patch(newch, oldch, parent) {
         oldch.content
       );
     } else if (typeof type === "function") {
-      var shouldUpdateFn = type.shouldUpdate || defShouldUpdate;
-      if (
-        shouldUpdateFn(newch.props, oldch.props, newch.content, oldch.content)
-      ) {
-        var vnode = type(newch.props, newch.content);
-        childNode = patch(vnode, oldch._data, parent);
-        newch._data = vnode;
+      if (isComponent(type.prototype)) {
+        var instance = oldch._data;
+        instance.patch(
+          childNode,
+          newch.props,
+          oldch.props,
+          newch.content,
+          oldch.content
+        );
+        newch._data = instance;
       } else {
-        newch._data = oldch._data;
+        var shouldUpdateFn = type.shouldUpdate || defShouldUpdate;
+        if (
+          shouldUpdateFn(newch.props, oldch.props, newch.content, oldch.content)
+        ) {
+          var vnode = type(newch.props, newch.content);
+          childNode = patch(vnode, oldch._data, parent);
+          newch._data = vnode;
+        } else {
+          newch._data = oldch._data;
+        }
       }
     } else if (typeof type === "string") {
       const isSelect = !isSVG && type.length === 6 && type === SELECT;
