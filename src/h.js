@@ -15,7 +15,7 @@ export function h(type, props, contArg) {
       for (i = 0; i < len; i++) {
         args[i] = arguments[i + 2];
       }
-      content = contArg;
+      content = args;
     }
   } else {
     isSVG = type === "svg";

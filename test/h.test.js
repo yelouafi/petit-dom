@@ -203,16 +203,16 @@ test("render functions", assert => {
   }
 
   assert.deepEqual(
-    h(Box, { title: "box title" }, "box content"),
+    h(Box, { title: "box title" }, "box content", "box content 2"),
     {
       _vnode: true,
       isSVG: false,
       type: Box,
       key: null,
       props: { title: "box title" },
-      content: "box content"
+      content: ["box content", "box content 2"]
     },
-    "content should not be normalized for render functions"
+    "content should be passed as a non normalized array to render functions"
   );
 
   assert.end();
