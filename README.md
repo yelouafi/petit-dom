@@ -9,7 +9,7 @@ with the algorithm
 
 ## Is this another React clone ?
 
-Not quite. React is a framewark is a more complete solution for writing UIs using Components. It ships with a full 
+Not quite. React is a more complete solution for writing UIs using Components. It ships with a full 
 Component API and implementation. Also, React is not specifically a virtual DOM library. It just happens that the Component
 API is implemented using virtual DOM (which may or may not change in the future).
 
