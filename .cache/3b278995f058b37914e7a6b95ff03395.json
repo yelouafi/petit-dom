@@ -1,0 +1,1 @@
+{"dependencies":[{"name":"./readable","loc":{"line":1,"column":25}}],"generated":{"js":"module.exports = require('./readable').Transform\n"},"hash":"a259245c8cc7ed50409178ee06a6cb29"}

@@ -1,0 +1,1 @@
+{"dependencies":[],"generated":{"js":"exports = module.exports = typeof Object.keys === 'function'\n  ? Object.keys : shim;\n\nexports.shim = shim;\nfunction shim (obj) {\n  var keys = [];\n  for (var key in obj) keys.push(key);\n  return keys;\n}\n"},"hash":"c20b562be471f2957c50651777e3e1b3"}

@@ -60,14 +60,14 @@ test("patch node with different types", assert => {
 
 test("patch props", assert => {
   const vnode = h("input", {
-    type: "number",
+    type: "text",
     value: "old value",
     style: "color: red"
   });
   const node = mount(vnode);
 
   const vnode2 = h("input", {
-    type: "number",
+    type: "text",
     value: "new value",
     style: "color: green; border: 1px solid black"
   });
@@ -75,7 +75,7 @@ test("patch props", assert => {
 
   assert.equal(node2, node);
   assert.equal(vnode2._node, node);
-  assert.equal(node.type, "number");
+  assert.equal(node.type, "text");
   assert.equal(node.value, "new value");
   assert.equal(node.style.color, "green");
   assert.equal(node.style.border, "1px solid black");

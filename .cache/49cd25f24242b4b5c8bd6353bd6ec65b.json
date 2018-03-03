@@ -1,0 +1,1 @@
+{"dependencies":[{"name":"function-bind","loc":{"line":1,"column":19}}],"generated":{"js":"var bind = require('function-bind');\n\nmodule.exports = bind.call(Function.call, Object.prototype.hasOwnProperty);\n"},"hash":"90943fc00217e865ad866faaf2796535"}

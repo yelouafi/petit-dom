@@ -1,0 +1,1 @@
+{"dependencies":[],"generated":{"js":"module.exports = function isPrimitive(value) {\n\treturn value === null || (typeof value !== 'function' && typeof value !== 'object');\n};\n"},"hash":"6f9450166bf86b8cb205c62edd335201"}

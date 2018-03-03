@@ -1,0 +1,1 @@
+{"dependencies":[],"generated":{"js":"module.exports = function mod(number, modulo) {\n\tvar remain = number % modulo;\n\treturn Math.floor(remain >= 0 ? remain : remain + modulo);\n};\n"},"hash":"99d3f524fdd872b2e6db368c46c78c80"}

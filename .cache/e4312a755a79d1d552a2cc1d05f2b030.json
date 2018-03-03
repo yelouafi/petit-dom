@@ -1,0 +1,1 @@
+{"dependencies":[{"name":"./hello.js","dynamic":true}],"generated":{"html":"<!doctype html>\r\n<html lang=\"en\">\r\n<head>\r\n  <title>petit-dom Hello example</title>\r\n</head>\r\n<body>\r\n\r\n  <script src=\"/dist/bf4a8ad12733404dbaf57cbc974dd9d9.js\"></script>\r\n</body>\r\n\r\n</html>\r\n"},"hash":"d5065af498efe0ddb6a6e0ae4bac4ad6"}

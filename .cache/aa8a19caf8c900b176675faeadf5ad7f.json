@@ -1,0 +1,1 @@
+{"dependencies":[{"name":"../../src","loc":{"line":1,"column":25}}],"generated":{"js":"\"use strict\";\n\nvar _src = require(\"../../src\");\n\nconst vel = (0, _src.h)(\"p\", null, \"Hello world\");\ndocument.body.appendChild((0, _src.mount)(vel));"},"hash":"057639eefffa669ad8b50be13951d4d5"}

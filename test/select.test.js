@@ -4,13 +4,10 @@ import { h, mount, patch } from "../src";
 test("select.selectedIndex (single selection)", assert => {
   const vnode = h(
     "select",
-    { selectedIndex: 1 },
+    null,
     h("option", { value: "eat" }, "Eat"),
-    h("option", { value: "pray" }, "Pray"),
-    /**
-     * this will be overrided by selectedIndex prop in single mode
-     */
-    h("option", { value: "love", selected: true }, "Love")
+    h("option", { value: "pray", selected: true }, "Pray"),
+    h("option", { value: "love" }, "Love")
   );
 
   const node = mount(vnode);
@@ -29,10 +26,10 @@ test("select.selectedIndex (single selection)", assert => {
 
   const vnode2 = h(
     "select",
-    { selectedIndex: 0 },
-    h("option", { value: "eat" }, "Eat"),
+    null,
+    h("option", { value: "eat", selected: true }, "Eat"),
     h("option", { value: "pray" }, "Pray"),
-    h("option", { value: "love", selected: true }, "Love")
+    h("option", { value: "love" }, "Love")
   );
 
   patch(vnode2, vnode);
@@ -57,10 +54,7 @@ test("select.value (single selection)", assert => {
     { value: "pray" },
     h("option", { value: "eat" }, "Eat"),
     h("option", { value: "pray" }, "Pray"),
-    /**
-     * this will be overrided by selectedIndex prop in single mode
-     */
-    h("option", { value: "love", selected: true }, "Love")
+    h("option", { value: "love" }, "Love")
   );
 
   const node = mount(vnode);
@@ -82,7 +76,7 @@ test("select.value (single selection)", assert => {
     { value: "eat" },
     h("option", { value: "eat" }, "Eat"),
     h("option", { value: "pray" }, "Pray"),
-    h("option", { value: "love", selected: true }, "Love")
+    h("option", { value: "love" }, "Love")
   );
 
   patch(vnode2, vnode);
@@ -104,7 +98,7 @@ test("select.value (single selection)", assert => {
 test("select with multiple = true", assert => {
   const vnode = h(
     "select",
-    { selectedIndex: 1, multiple: true },
+    { multiple: true },
     h("option", { value: "eat", selected: true }, "Eat"),
     h("option", { value: "pray", selected: false }, "Pray"),
     h("option", { value: "love", selected: true }, "Love")

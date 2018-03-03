@@ -1,0 +1,1 @@
+{"dependencies":[{"name":"events","loc":{"line":1,"column":25}}],"generated":{"js":"module.exports = require('events').EventEmitter;\n"},"hash":"e43f71d1885d59343a81bd5c3de656c1"}

@@ -1,0 +1,1 @@
+{"dependencies":[],"generated":{"js":"module.exports = function () {\n    for (var i = 0; i < arguments.length; i++) {\n        if (arguments[i] !== undefined) return arguments[i];\n    }\n};\n"},"hash":"0861278b1d441840d0a153ae7fd8fc29"}

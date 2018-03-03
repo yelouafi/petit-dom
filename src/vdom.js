@@ -1,10 +1,7 @@
 import { isArray, isComponent } from "./utils";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
-const SELECT = "select";
-const SELECT_DELAYED_PROPS = { selectedIndex: true };
-const INPUT = "input";
-const INPUT_DELAYED_PROPS = { type: true, value: true };
+const DELAYED_PROPS = { selected: true, value: true, checked: true };
 /**
   TODO: activate full namespaced attributes (not supported in JSX)
   const XML_NS = "http://www.w3.org/XML/1998/namespace"
@@ -24,48 +21,6 @@ function defShouldUpdate(p1, p2, c1, c2) {
   return false;
 }
 
-function updateSelect(node, props, children, oldProps, oldChildren) {
-  const isMount = oldProps == null;
-  const hasSelIndex = props.selectedIndex != null;
-  const hasValue = !hasSelIndex && "value" in props;
-  const ignoreKeys = hasSelIndex || hasValue ? SELECT_DELAYED_PROPS : null;
-  setProps(node, props, null, ignoreKeys);
-  if (isMount) {
-    appendChildren(node, children);
-  } else {
-    patchContent(node, children, oldChildren);
-  }
-  if (!props.multiple) {
-    if (hasSelIndex) {
-      if (isMount || props.selectedIndex !== oldProps.selectedIndex) {
-        node.selectedIndex = props.selectedIndex;
-      }
-    } else if (hasValue) {
-      if (isMount || props.value !== oldProps.value) {
-        node.value = props.value;
-      }
-    }
-  }
-  return node;
-}
-
-function updateInput(node, props, oldProps) {
-  const isMount = oldProps == null;
-  const hasValue = props.value != null;
-
-  const ignoreKeys = hasValue ? INPUT_DELAYED_PROPS : null;
-  if (props.type != null && (isMount || props.type !== oldProps.type)) {
-    node.type = props.type;
-  }
-
-  setProps(node, props, null, ignoreKeys);
-
-  if (hasValue && (isMount || props.value !== oldProps.value)) {
-    node.value = props.value;
-  }
-  return node;
-}
-
 export function mount(c) {
   var node;
   if (c._text != null) {
@@ -73,33 +28,21 @@ export function mount(c) {
   } else if (c._vnode === true) {
     const { type, props, content, isSVG } = c;
     if (typeof type === "string") {
-      const isSelect =
-        !isSVG && type.length === 6 && type.toLowerCase() === SELECT;
-      const isInput =
-        !isSelect &&
-        !isSVG &&
-        type.length === 5 &&
-        type.toLowerCase() === INPUT;
-      if (isSelect) {
+      // TODO : {is} for custom elements
+      var delayedProps;
+      if (!isSVG) {
         node = document.createElement(type);
-        updateSelect(node, props, content);
-      } else if (isInput) {
-        node = document.createElement(type);
-        updateInput(node, props);
       } else {
-        // TODO : {is} for custom elements
-        if (!isSVG) {
-          node = document.createElement(type);
-          setProps(node, props, undefined);
-        } else {
-          node = document.createElementNS(SVG_NS, type);
-          setAttributes(node, props, undefined);
-        }
-        if (!isArray(content)) {
-          node.appendChild(mount(content));
-        } else {
-          appendChildren(node, content);
-        }
+        node = document.createElementNS(SVG_NS, type);
+      }
+      delayedProps = setAttributes(node, props, undefined);
+      if (!isArray(content)) {
+        node.appendChild(mount(content));
+      } else {
+        appendChildren(node, content);
+      }
+      if (delayedProps != null) {
+        setProps(node, props, undefined, delayedProps);
       }
     } else if (isComponent(type)) {
       node = type.mount(props, content);
@@ -172,9 +115,10 @@ export function unmount(ch) {
   }
 }
 
-function setProps(el, props, oldProps, ignoreKeys) {
-  for (var key in props) {
-    if (ignoreKeys != null && ignoreKeys[key] === true) continue;
+function setProps(el, props, oldProps, keys) {
+  var key;
+  for (var i = 0; i < keys.length; i++) {
+    key = keys[i];
     var oldv = oldProps && oldProps[key];
     var newv = props[key];
     if (oldv !== newv) {
@@ -184,7 +128,12 @@ function setProps(el, props, oldProps, ignoreKeys) {
 }
 
 function setAttributes(el, attrs, oldAttrs) {
+  let props = [];
   for (var key in attrs) {
+    if (key.startsWith("on") || key in DELAYED_PROPS) {
+      props.push(key);
+      continue;
+    }
     var oldv = oldAttrs != null ? oldAttrs[key] : undefined;
     var newv = attrs[key];
     if (oldv !== newv) {
@@ -195,6 +144,9 @@ function setAttributes(el, attrs, oldAttrs) {
     if (!(key in attrs)) {
       el.removeAttribute(key);
     }
+  }
+  if (props.length > 0) {
+    return props;
   }
 }
 
@@ -226,7 +178,7 @@ export function patch(newch, oldch, parent) {
       childNode.nodeValue = t2;
     }
   } else if (oldch.type === newch.type && oldch.isSVG === newch.isSVG) {
-    const { type, isSVG } = oldch;
+    const { type } = oldch;
     if (isComponent(type)) {
       type.patch(
         childNode,
@@ -259,29 +211,10 @@ export function patch(newch, oldch, parent) {
         }
       }
     } else if (typeof type === "string") {
-      const isSelect = !isSVG && type.length === 6 && type === SELECT;
-      const isInput =
-        !isSelect &&
-        !isSVG &&
-        type.length === 5 &&
-        type.toLowerCase() === INPUT;
-      if (isSelect) {
-        updateSelect(
-          childNode,
-          newch.props,
-          newch.content,
-          oldch.props,
-          oldch.content
-        );
-      } else if (isInput) {
-        updateInput(childNode, newch.props, oldch.props);
-      } else {
-        if (!isSVG) {
-          setProps(childNode, newch.props, oldch.props);
-        } else {
-          setAttributes(childNode, newch.props, oldch.props);
-        }
-        patchContent(childNode, newch.content, oldch.content);
+      var delayedProps = setAttributes(childNode, newch.props, oldch.props);
+      patchContent(childNode, newch.content, oldch.content);
+      if (delayedProps != null) {
+        setProps(childNode, newch.props, oldch.props, delayedProps);
       }
     } else {
       throw new Error("Unkown node type! " + type);

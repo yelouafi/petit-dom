@@ -1,0 +1,1 @@
+{"dependencies":[],"generated":{"js":"module.exports = function sign(number) {\n\treturn number >= 0 ? 1 : -1;\n};\n"},"hash":"49a96128f09c44ff765ad3a426cd7774"}
