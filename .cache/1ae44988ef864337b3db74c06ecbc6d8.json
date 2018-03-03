@@ -1,1 +1,0 @@
-{"dependencies":[{"name":"./lib/_stream_writable.js","loc":{"line":1,"column":25}}],"generated":{"js":"module.exports = require('./lib/_stream_writable.js');\n"},"hash":"4da29b29a984862acf683ed9bb9f8297"}

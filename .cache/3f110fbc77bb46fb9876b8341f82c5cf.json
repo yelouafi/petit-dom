@@ -1,1 +1,0 @@
-{"dependencies":[{"name":"./lib/_stream_duplex.js","loc":{"line":1,"column":25}}],"generated":{"js":"module.exports = require('./lib/_stream_duplex.js');\n"},"hash":"6b81bbd2497f77139db2735a4d4e0d11"}

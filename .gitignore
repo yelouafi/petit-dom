@@ -36,3 +36,6 @@ dist
 
 # docs generated files
 _book
+
+# parcel cache files
+.cache

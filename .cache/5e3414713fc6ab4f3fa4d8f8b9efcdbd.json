@@ -1,1 +1,0 @@
-{"dependencies":[],"generated":{"js":"var $isNaN = Number.isNaN || function (a) { return a !== a; };\n\nmodule.exports = Number.isFinite || function (x) { return typeof x === 'number' && !$isNaN(x) && x !== Infinity && x !== -Infinity; };\n"},"hash":"508dcc2a1ac981db10e3bd1e235dbbe0"}
