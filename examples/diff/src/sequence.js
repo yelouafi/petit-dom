@@ -3,9 +3,9 @@ import { h } from "../../../src/index";
 
 export default function Sequence({ sequence }) {
   return (
-    <div className="seq">
+    <div class="seq">
       {sequence.map(it =>
-        <div key={it == +it ? it : null} data-key={it} className="box">
+        <div key={it == +it ? it : null} data-key={it} class="box">
           {it}
         </div>
       )}

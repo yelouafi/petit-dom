@@ -69,9 +69,9 @@ function render() {
   return (
     <div>
       <div>
-        <span className="box inserted">Inserted</span>
-        <span className="box moved">Moved</span>
-        <span className="box lcs">Non moved</span>
+        <span class="box inserted">Inserted</span>
+        <span class="box moved">Moved</span>
+        <span class="box lcs">Non moved</span>
       </div>
       <hr />
       <input
