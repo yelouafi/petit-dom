@@ -18,6 +18,17 @@ export function h(type, props, contArg) {
       content = args;
     }
   } else {
+    var classregex = type.match(/\..*?(?=\.|$|#)/g)
+    if (classregex) {
+      var classtr = classregex.join(' ').replace('.','')
+      props.class = props.class ? props.class + ' ' + classtr : classtr
+    }
+    var idregex = type.match(/#.*?(?=\.|$|#)/)
+    if (idregex && !props.id) {
+      props.id = idregex[0].slice(1)
+    }
+    type = type.match(/^.*?(?=\.|\#|$)/)[0]
+    
     isSVG = type === "svg";
     if (len === 1) {
       if (isArray(contArg)) {
