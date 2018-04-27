@@ -224,6 +224,7 @@ export function patch(newch, oldch, parent) {
     if (parent) {
       parent.replaceChild(childNode, oldch._node);
     }
+    unmount(oldch);
   }
 
   newch._node = childNode;
