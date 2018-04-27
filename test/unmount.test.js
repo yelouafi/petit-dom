@@ -1,7 +1,7 @@
 import test from "tape";
 import { h, mount, patch } from "../src";
 
-test.only("unmount", assert => {
+test("unmount", assert => {
   let mountNode, unmountNode;
 
   const Wrapper = {
