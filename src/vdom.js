@@ -1,7 +1,12 @@
 import { isArray, isComponent } from "./utils";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
-const DELAYED_PROPS = { selected: true, value: true, checked: true };
+const DELAYED_PROPS = {
+  selected: true,
+  value: true,
+  checked: true,
+  innerHTML: true
+};
 /**
   TODO: activate full namespaced attributes (not supported in JSX)
   const XML_NS = "http://www.w3.org/XML/1998/namespace"
