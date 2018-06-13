@@ -1,7 +1,12 @@
 import { isArray, isComponent } from "./utils";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
-const DELAYED_PROPS = { selected: true, value: true, checked: true };
+const DELAYED_PROPS = {
+  selected: true,
+  value: true,
+  checked: true,
+  innerHTML: true
+};
 /**
   TODO: activate full namespaced attributes (not supported in JSX)
   const XML_NS = "http://www.w3.org/XML/1998/namespace"
@@ -10,7 +15,7 @@ const XLINK_NS = "http://www.w3.org/1999/xlink";
 const NS_ATTRS = {
   show: XLINK_NS,
   actuate: XLINK_NS,
-  href: XLINK_NS
+  // href: XLINK_NS
 };
 
 function defShouldUpdate(p1, p2, c1, c2) {
@@ -19,6 +24,29 @@ function defShouldUpdate(p1, p2, c1, c2) {
     if (p1[key] !== p2[key]) return true;
   }
   return false;
+}
+
+const lifeMethods = {create:[],update:[],remove:[]};
+
+function runHooks() {
+  lifeMethods.remove.forEach((m)=>m())
+  lifeMethods.create.forEach((m)=>m())
+  lifeMethods.update.forEach((m)=>m())
+  lifeMethods.create = []
+  lifeMethods.update = []
+  lifeMethods.remove = []
+}
+
+export function patchLifecycle(newch, oldch, parent) {
+  var ret = patch(newch, oldch, parent)
+  runHooks()
+  return ret
+}
+
+export function mountLifecycle(c) {
+  var ret = mount(c)
+  runHooks()
+  return ret
 }
 
 export function mount(c) {
@@ -43,6 +71,9 @@ export function mount(c) {
       }
       if (delayedProps != null) {
         setProps(node, props, undefined, delayedProps);
+      }
+      if(typeof props.oncreate === 'function'){
+        lifeMethods.create.push(props.oncreate.bind(null,node))
       }
     } else if (isComponent(type)) {
       node = type.mount(props, content);
@@ -78,6 +109,16 @@ function appendChildren(
   }
 }
 
+function removeNodeDeferred(parent, child) {
+  if(typeof child.onremove === 'function') {
+      lifeMethods.remove.push(child.onremove.bind(null, child, function(){
+        parent.removeChild(child);
+      }))
+  } else {
+    parent.removeChild(child);
+  }
+}
+
 function removeChildren(
   parent,
   children,
@@ -86,12 +127,17 @@ function removeChildren(
 ) {
   let cleared;
   if (parent.childNodes.length === end - start + 1) {
-    parent.textContent = "";
-    cleared = true;
+    // var firstC = parent.firstElementChild
+    // if(typeof firstC.onremove === 'function'){
+    //   firstC.onremove(firstC, function(){
+    //     parent.textContent = "";
+    //   })
+    // }
+    // cleared = true;
   }
   while (start <= end) {
     var ch = children[start++];
-    if (!cleared) parent.removeChild(ch._node);
+    if (!cleared) removeNodeDeferred(parent,ch._node);
     unmount(ch);
   }
 }
@@ -165,6 +211,8 @@ function setDOMAttr(el, attr, value) {
   }
 }
 
+
+
 export function patch(newch, oldch, parent) {
   var childNode = oldch._node;
 
@@ -216,6 +264,9 @@ export function patch(newch, oldch, parent) {
       if (delayedProps != null) {
         setProps(childNode, newch.props, oldch.props, delayedProps);
       }
+      if(typeof newch.props.onupdate === 'function') {
+        lifeMethods.update.push(newch.props.onupdate.bind(null, oldch._node))
+      }
     } else {
       throw new Error("Unkown node type! " + type);
     }
@@ -224,6 +275,7 @@ export function patch(newch, oldch, parent) {
     if (parent) {
       parent.replaceChild(childNode, oldch._node);
     }
+    unmount(oldch);
   }
 
   newch._node = childNode;
@@ -371,8 +423,9 @@ export function diffChildren(
   // fast case: difference between the 2 sequences is only one item
   if (oldStart === oldEnd) {
     var node = oldChildren[oldStart]._node;
+
     appendChildren(parent, children, newStart, newEnd, node);
-    parent.removeChild(node);
+    removeNodeDeferred(parent,node);
     unmount(node);
     return;
   }
@@ -615,7 +668,7 @@ function diffOND(
     pv = d ? v[d - 1] : [0, 0];
     k = c - r;
     if (k === -d || (k !== d && pv[pd + k - 1] < pv[pd + k + 1])) {
-      // vertical edge = insertion
+      // ver§al edge = insertion
       r--;
       diff[diffIdx--] = INSERTION;
     } else {
@@ -678,7 +731,7 @@ function applyDiff(
     } else if (op === DELETION) {
       oldCh = oldChildren[oldChIdx++];
       if (oldCh.key == null || moveMap[oldCh.key] == null) {
-        parent.removeChild(oldCh._node);
+        removeNodeDeferred(parent, oldCh._node)
         unmount(oldCh);
       }
     }

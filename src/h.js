@@ -1,5 +1,6 @@
 import { EMPTYO, EMPTYAR, isArray, isVNode } from "./utils";
 
+
 export function h(type, props, contArg) {
   var content,
     args,
@@ -18,6 +19,18 @@ export function h(type, props, contArg) {
       content = args;
     }
   } else {
+    
+    var classregex = type.match(/\..*?(?=\.|$|#)/g)
+    if (classregex) {
+      var classtr = classregex.join(' ').replace('.','')
+      props.class = props.class ? props.class +' '+ classtr : classtr
+    }
+    var idregex = type.match(/#.*?(?=\.|$|#)/)
+    if (idregex && !props.id) {
+      props.id = idregex[0].slice(1)
+    }
+    type = type.match(/^.*?(?=\.|\#|$)/)[0]
+
     isSVG = type === "svg";
     if (len === 1) {
       if (isArray(contArg)) {
@@ -26,7 +39,7 @@ export function h(type, props, contArg) {
         contArg.isSVG = isSVG;
         content = [contArg];
       } else {
-        content = [{ _text: contArg == null ? "" : contArg }];
+        content = [{ _text: (contArg == null || contArg == false) ? "" : contArg }];
       }
     } else if (len > 1) {
       args = Array(len);
@@ -55,7 +68,7 @@ export function maybeFlatten(arr, isSVG) {
     if (isArray(ch)) {
       return flattenChildren(arr, i, arr.slice(0, i), isSVG);
     } else if (!isVNode(ch)) {
-      arr[i] = { _text: ch == null ? "" : ch };
+      arr[i] = { _text: (ch == null || ch == false) ? "" : ch };
     } else if (isSVG && !ch.isSVG) {
       ch.isSVG = true;
     }
