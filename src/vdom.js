@@ -1,4 +1,4 @@
-import { isArray, isComponent } from "./utils";
+import { isArray, isComponent, findK, indexOf } from "./utils";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 const DELAYED_PROPS = {
@@ -781,33 +781,4 @@ function diffWithMap(
     curOldi--;
   }
   applyDiff(parent, diff, children, oldChildren, newStart, oldStart, keymap);
-}
-
-function findK(ktr, j) {
-  var lo = 1;
-  var hi = ktr.length - 1;
-  while (lo <= hi) {
-    var mid = Math.ceil((lo + hi) / 2);
-    if (j < ktr[mid]) hi = mid - 1;
-    else lo = mid + 1;
-  }
-  return lo;
-}
-
-function indexOf(a, suba, aStart, aEnd, subaStart, subaEnd, eq) {
-  var j = subaStart,
-    k = -1;
-  var subaLen = subaEnd - subaStart + 1;
-  while (aStart <= aEnd && aEnd - aStart + 1 >= subaLen) {
-    if (eq(a[aStart], suba[j])) {
-      if (k < 0) k = aStart;
-      j++;
-      if (j > subaEnd) return k;
-    } else {
-      k = -1;
-      j = subaStart;
-    }
-    aStart++;
-  }
-  return -1;
 }
