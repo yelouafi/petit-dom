@@ -26,6 +26,31 @@ function defShouldUpdate(p1, p2, c1, c2) {
   return false;
 }
 
+var lifeMethods = {create:[],remove:[]};
+
+function runHooks() {
+  for (var i in lifeMethods.create) {
+    lifeMethods.create[i]()
+  }
+  for (var j in lifeMethods.remove) {
+    lifeMethods.remove[j]()
+  }
+  lifeMethods.create = []
+  lifeMethods.remove = []
+}
+
+export function patchLifecycle(newch, oldch, parent) {
+  var ret = patch(newch, oldch, parent)
+  runHooks()
+  return ret
+}
+
+export function mountLifecycle(c) {
+  var ret = mount(c)
+  runHooks()
+  return ret
+}
+
 export function mount(c) {
   var node;
   if (c._text != null) {
@@ -48,6 +73,9 @@ export function mount(c) {
       }
       if (delayedProps != null) {
         setProps(node, props, undefined, delayedProps);
+      }
+      if(typeof props.oncreate === "function"){
+        lifeMethods.create.push(props.oncreate.bind(null,node))
       }
     } else if (isComponent(type)) {
       node = type.mount(props, content);
@@ -83,6 +111,26 @@ function appendChildren(
   }
 }
 
+function walkSubelementsAddRemoveLifecycle(parent, child) {
+  if(child.nodeType === 3) return
+  if(typeof child.onremove === "function") {
+      lifeMethods.remove.push(child.onremove.bind(null, child, function() {
+          parent.removeChild(child);
+        })
+      )
+  }
+  for(var subChild of child.children){
+    walkSubelementsAddRemoveLifecycle(child, subChild)
+  }
+}
+
+function removeNodeDeferred(parent, child) {
+  walkSubelementsAddRemoveLifecycle(parent, child)
+  if(!child.onremove) {
+    parent.removeChild(child)    
+  }
+}
+
 function removeChildren(
   parent,
   children,
@@ -90,13 +138,9 @@ function removeChildren(
   end = children.length - 1
 ) {
   let cleared;
-  if (parent.childNodes.length === end - start + 1) {
-    parent.textContent = "";
-    cleared = true;
-  }
   while (start <= end) {
     var ch = children[start++];
-    if (!cleared) parent.removeChild(ch._node);
+    if (!cleared) removeNodeDeferred(parent,ch._node);
     unmount(ch);
   }
 }
@@ -170,6 +214,8 @@ function setDOMAttr(el, attr, value, isSVG) {
   }
 }
 
+
+
 export function patch(newch, oldch, parent) {
   var childNode = oldch._node;
 
@@ -225,6 +271,9 @@ export function patch(newch, oldch, parent) {
       patchContent(childNode, newch.content, oldch.content);
       if (delayedProps != null) {
         setProps(childNode, newch.props, oldch.props, delayedProps);
+      }
+      if(typeof newch.props.onupdate === 'function') {
+        lifeMethods.update.push(newch.props.onupdate.bind(null, oldch._node))
       }
     } else {
       throw new Error("Unkown node type! " + type);
@@ -382,8 +431,9 @@ export function diffChildren(
   // fast case: difference between the 2 sequences is only one item
   if (oldStart === oldEnd) {
     var node = oldChildren[oldStart]._node;
+
     appendChildren(parent, children, newStart, newEnd, node);
-    parent.removeChild(node);
+    removeNodeDeferred(parent,node);
     unmount(node);
     return;
   }
@@ -626,7 +676,7 @@ function diffOND(
     pv = d ? v[d - 1] : [0, 0];
     k = c - r;
     if (k === -d || (k !== d && pv[pd + k - 1] < pv[pd + k + 1])) {
-      // vertical edge = insertion
+      // ver§al edge = insertion
       r--;
       diff[diffIdx--] = INSERTION;
     } else {
@@ -689,7 +739,7 @@ function applyDiff(
     } else if (op === DELETION) {
       oldCh = oldChildren[oldChIdx++];
       if (oldCh.key == null || moveMap[oldCh.key] == null) {
-        parent.removeChild(oldCh._node);
+        removeNodeDeferred(parent, oldCh._node)
         unmount(oldCh);
       }
     }
