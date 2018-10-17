@@ -26,14 +26,16 @@ function defShouldUpdate(p1, p2, c1, c2) {
   return false;
 }
 
-const lifeMethods = {create:[],update:[],remove:[]};
+var lifeMethods = {create:[],remove:[]};
 
 function runHooks() {
-  lifeMethods.remove.forEach((m)=>m())
-  lifeMethods.create.forEach((m)=>m())
-  lifeMethods.update.forEach((m)=>m())
+  for (var i in lifeMethods.create) {
+    lifeMethods.create[i]()
+  }
+  for (var j in lifeMethods.remove) {
+    lifeMethods.remove[j]()
+  }
   lifeMethods.create = []
-  lifeMethods.update = []
   lifeMethods.remove = []
 }
 
@@ -72,7 +74,7 @@ export function mount(c) {
       if (delayedProps != null) {
         setProps(node, props, undefined, delayedProps);
       }
-      if(typeof props.oncreate === 'function'){
+      if(typeof props.oncreate === "function"){
         lifeMethods.create.push(props.oncreate.bind(null,node))
       }
     } else if (isComponent(type)) {
@@ -109,13 +111,23 @@ function appendChildren(
   }
 }
 
+function walkSubelementsAddRemoveLifecycle(parent, child) {
+  if(child.nodeType === 3) return
+  if(child.onremove) {
+      lifeMethods.remove.push(child.onremove.bind(null, child, function() {
+          parent.removeChild(child);
+        })
+      )
+  }
+  for(var subChild of child.children){
+    walkSubelementsAddRemoveLifecycle(child, subChild)
+  }
+}
+
 function removeNodeDeferred(parent, child) {
-  if(typeof child.onremove === 'function') {
-      lifeMethods.remove.push(child.onremove.bind(null, child, function(){
-        parent.removeChild(child);
-      }))
-  } else {
-    parent.removeChild(child);
+  walkSubelementsAddRemoveLifecycle(parent, child)
+  if(!child.onremove) {
+    parent.removeChild(child)    
   }
 }
 
@@ -126,15 +138,6 @@ function removeChildren(
   end = children.length - 1
 ) {
   let cleared;
-  if (parent.childNodes.length === end - start + 1) {
-    // var firstC = parent.firstElementChild
-    // if(typeof firstC.onremove === 'function'){
-    //   firstC.onremove(firstC, function(){
-    //     parent.textContent = "";
-    //   })
-    // }
-    // cleared = true;
-  }
   while (start <= end) {
     var ch = children[start++];
     if (!cleared) removeNodeDeferred(parent,ch._node);
