@@ -151,7 +151,7 @@ class Component {
 And an example application of how to use the Component super class
 
 ```js
-import { h } from 'petti-dom'
+import { h } from 'petit-dom'
 
 class Counter extends Component {
   
