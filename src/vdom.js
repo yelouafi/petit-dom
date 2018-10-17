@@ -214,8 +214,6 @@ function setDOMAttr(el, attr, value, isSVG) {
   }
 }
 
-
-
 export function patch(newch, oldch, parent) {
   var childNode = oldch._node;
 
@@ -676,7 +674,7 @@ function diffOND(
     pv = d ? v[d - 1] : [0, 0];
     k = c - r;
     if (k === -d || (k !== d && pv[pd + k - 1] < pv[pd + k + 1])) {
-      // ver§al edge = insertion
+      // vertical edge = insertion
       r--;
       diff[diffIdx--] = INSERTION;
     } else {
