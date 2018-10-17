@@ -15,7 +15,7 @@ const XLINK_NS = "http://www.w3.org/1999/xlink";
 const NS_ATTRS = {
   show: XLINK_NS,
   actuate: XLINK_NS,
-  // href: XLINK_NS
+  href: XLINK_NS
 };
 
 function defShouldUpdate(p1, p2, c1, c2) {
