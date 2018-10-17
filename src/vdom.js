@@ -113,7 +113,7 @@ function appendChildren(
 
 function walkSubelementsAddRemoveLifecycle(parent, child) {
   if(child.nodeType === 3) return
-  if(child.onremove) {
+  if(typeof child.onremove === "function") {
       lifeMethods.remove.push(child.onremove.bind(null, child, function() {
           parent.removeChild(child);
         })
