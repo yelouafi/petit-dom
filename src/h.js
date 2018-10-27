@@ -26,7 +26,7 @@ export function h(type, props, contArg) {
         contArg.isSVG = isSVG;
         content = [contArg];
       } else {
-        content = [{ _text: contArg == null ? "" : contArg }];
+        content = [{ _text: !contArg ? "" : contArg }];
       }
     } else if (len > 1) {
       args = Array(len);

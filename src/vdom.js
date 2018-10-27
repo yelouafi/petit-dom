@@ -18,6 +18,58 @@ const NS_ATTRS = {
   href: XLINK_NS
 };
 
+var createdMethods = [];
+var removedMethods = [];
+var useLifeMethods = false;
+function runHooks() {
+  for (var i in createdMethods) {
+    createdMethods[i]();
+  }
+  createdMethods = [];
+  for (var j in removedMethods) {
+    removedMethods[j]();
+  }
+  removedMethods = [];
+}
+
+export function mountLifecycle(c) {
+  useLifeMethods = true;
+  var ret = mount(c);
+  runHooks();
+  useLifeMethods = false;
+  return ret;
+}
+
+export function patchLifecycle(newch, oldch, parent) {
+  useLifeMethods = true;
+  var ret = patch(newch, oldch, parent);
+  runHooks();
+  useLifeMethods = false;
+  return ret;
+}
+
+function walkSubelementsAddRemoveLifecycle(parent, child) {
+  if (child.nodeType === 3) return;
+  if (typeof child.onremove === "function") {
+    removedMethods.push(
+      child.onremove.bind(null, child, function() {
+        parent.removeChild(child);
+      })
+    );
+  }
+  for (var subChild of child.children) {
+    walkSubelementsAddRemoveLifecycle(child, subChild);
+  }
+}
+
+function removeNodeDeferred(parent, child) {
+  if (typeof child.onremove === "function") {
+    walkSubelementsAddRemoveLifecycle(parent, child);
+  } else {
+    parent.removeChild(child);
+  }
+}
+
 function defShouldUpdate(p1, p2, c1, c2) {
   if (c1 !== c2) return true;
   for (var key in p1) {
@@ -48,6 +100,9 @@ export function mount(c) {
       }
       if (delayedProps != null) {
         setProps(node, props, undefined, delayedProps);
+      }
+      if (useLifeMethods && typeof props.oncreate === "function") {
+        createdMethods.push(props.oncreate.bind(null, node));
       }
     } else if (isComponent(type)) {
       node = type.mount(props, content);
@@ -90,13 +145,14 @@ function removeChildren(
   end = children.length - 1
 ) {
   let cleared;
-  if (parent.childNodes.length === end - start + 1) {
+  if (!useLifeMethods && parent.childNodes.length === end - start + 1) {
     parent.textContent = "";
     cleared = true;
   }
   while (start <= end) {
     var ch = children[start++];
-    if (!cleared) parent.removeChild(ch._node);
+    if (useLifeMethods) removeNodeDeferred(parent, ch._node);
+    else if (!cleared) parent.removeChild(ch._node);
     unmount(ch);
   }
 }
@@ -383,7 +439,8 @@ export function diffChildren(
   if (oldStart === oldEnd) {
     var node = oldChildren[oldStart]._node;
     appendChildren(parent, children, newStart, newEnd, node);
-    parent.removeChild(node);
+    if (useLifeMethods) removeNodeDeferred(parent, node);
+    else parent.removeChild(node);
     unmount(node);
     return;
   }
@@ -689,7 +746,8 @@ function applyDiff(
     } else if (op === DELETION) {
       oldCh = oldChildren[oldChIdx++];
       if (oldCh.key == null || moveMap[oldCh.key] == null) {
-        parent.removeChild(oldCh._node);
+        if (useLifeMethods) removeNodeDeferred(parent, oldCh._node);
+        else parent.removeChild(oldCh._node);
         unmount(oldCh);
       }
     }

@@ -1,2 +1,9 @@
 export { h } from "./h";
-export { mount, patch, unmount, diffChildren } from "./vdom";
+export {
+  mount,
+  patch,
+  mountLifecycle,
+  patchLifecycle,
+  unmount,
+  diffChildren
+} from "./vdom";
