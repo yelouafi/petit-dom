@@ -55,7 +55,7 @@ export function maybeFlatten(arr, isSVG) {
     if (isArray(ch)) {
       return flattenChildren(arr, i, arr.slice(0, i), isSVG);
     } else if (!isVNode(ch)) {
-      arr[i] = { _text: ch == null ? "" : ch };
+      arr[i] = { _text: !ch ? "" : ch };
     } else if (isSVG && !ch.isSVG) {
       ch.isSVG = true;
     }
@@ -74,7 +74,7 @@ function flattenChildren(children, start, arr, isSVG) {
       }
       arr.push(ch);
     } else {
-      arr.push({ _text: ch == null ? "" : ch });
+      arr.push({ _text: !ch ? "" : ch });
     }
   }
   return arr;
