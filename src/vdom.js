@@ -1,4 +1,4 @@
-import { isArray, isComponent } from "./utils";
+import { isArray, isComponent, findK, indexOf } from "./utils";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 const DELAYED_PROPS = {
@@ -40,7 +40,7 @@ export function mount(c) {
       } else {
         node = document.createElementNS(SVG_NS, type);
       }
-      delayedProps = setAttributes(node, props, undefined);
+      delayedProps = setAttributes(node, props, undefined, isSVG);
       if (!isArray(content)) {
         node.appendChild(mount(content));
       } else {
@@ -132,7 +132,7 @@ function setProps(el, props, oldProps, keys) {
   }
 }
 
-function setAttributes(el, attrs, oldAttrs) {
+function setAttributes(el, attrs, oldAttrs, isSVG) {
   let props = [];
   for (var key in attrs) {
     if (key.startsWith("on") || key in DELAYED_PROPS) {
@@ -142,7 +142,7 @@ function setAttributes(el, attrs, oldAttrs) {
     var oldv = oldAttrs != null ? oldAttrs[key] : undefined;
     var newv = attrs[key];
     if (oldv !== newv) {
-      setDOMAttr(el, key, newv);
+      setDOMAttr(el, key, newv, isSVG);
     }
   }
   for (key in oldAttrs) {
@@ -155,13 +155,13 @@ function setAttributes(el, attrs, oldAttrs) {
   }
 }
 
-function setDOMAttr(el, attr, value) {
+function setDOMAttr(el, attr, value, isSVG) {
   if (value === true) {
     el.setAttribute(attr, "");
   } else if (value === false) {
     el.removeAttribute(attr);
   } else {
-    var ns = NS_ATTRS[attr];
+    var ns = isSVG ? NS_ATTRS[attr] : undefined;
     if (ns !== undefined) {
       el.setAttributeNS(ns, attr, value);
     } else {
@@ -216,7 +216,12 @@ export function patch(newch, oldch, parent) {
         }
       }
     } else if (typeof type === "string") {
-      var delayedProps = setAttributes(childNode, newch.props, oldch.props);
+      var delayedProps = setAttributes(
+        childNode,
+        newch.props,
+        oldch.props,
+        newch.isSVG
+      );
       patchContent(childNode, newch.content, oldch.content);
       if (delayedProps != null) {
         setProps(childNode, newch.props, oldch.props, delayedProps);
@@ -781,33 +786,4 @@ function diffWithMap(
     curOldi--;
   }
   applyDiff(parent, diff, children, oldChildren, newStart, oldStart, keymap);
-}
-
-function findK(ktr, j) {
-  var lo = 1;
-  var hi = ktr.length - 1;
-  while (lo <= hi) {
-    var mid = Math.ceil((lo + hi) / 2);
-    if (j < ktr[mid]) hi = mid - 1;
-    else lo = mid + 1;
-  }
-  return lo;
-}
-
-function indexOf(a, suba, aStart, aEnd, subaStart, subaEnd, eq) {
-  var j = subaStart,
-    k = -1;
-  var subaLen = subaEnd - subaStart + 1;
-  while (aStart <= aEnd && aEnd - aStart + 1 >= subaLen) {
-    if (eq(a[aStart], suba[j])) {
-      if (k < 0) k = aStart;
-      j++;
-      if (j > subaEnd) return k;
-    } else {
-      k = -1;
-      j = subaStart;
-    }
-    aStart++;
-  }
-  return -1;
 }
