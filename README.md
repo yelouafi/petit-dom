@@ -19,7 +19,7 @@ you may plug in your own Component implementation in a certain subtree.
 
 This means that you can (and that the library is meant to) create your own Component implementation on top of the low level API.
 If you need a ready to use full Component implementation, you should instead a library like React, or one of its 
-lightwight alternatives like Preact.
+lightweight alternatives like Preact.
 
 ## Install
 
