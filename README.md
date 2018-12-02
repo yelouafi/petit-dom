@@ -7,19 +7,14 @@ https://neil.fraser.name/writing/diff/ and the algorithm presented
 in the paper ["An O(ND) Difference Algorithm and Its Variations](http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.4.6927&rep=rep1&type=pdf). There is also [an excellent article](https://www.codeproject.com/Articles/42279/Investigating-Myers-diff-algorithm-Part-of) which explains how the algorithm works. The article includes a GUI application to play
 with the algorithm
 
-## Is this another React clone ?
+## Trade offs
 
-Not quite. React is a more complete solution for writing UIs using Components. It ships with a full 
-Component API and implementation. Also, React is not specifically a virtual DOM library. It just happens that the Component
-API is implemented using virtual DOM (which may or may not change in the future).
-
-petit-dom is a more low level library. First it's specifically tied to the virtual DOM model. Second it has no builtin 
-Component implementation. It comes with a minimal Component inerop API [see below](#custom-components) that specifies how
-you may plug in your own Component implementation in a certain subtree.
-
-This means that you can (and that the library is meant to) create your own Component implementation on top of the low level API.
-If you need a ready to use full Component implementation, you should instead a library like React, or one of its 
-lightweight alternatives like Preact.
+- 👎 No Components. If you want a high level library with full Component support, check for libs like React, Preact or Inferno.
+- 👎 No separation between diffing and patching, you probably don't want that unless you're planning to build your own shceduling for DOM updates (currently all DOM updates are performed synchronously. At the time of this writing, probably React is the only lib that implements DOM updating over mulitple frames).
+- 👎 No Server Side Rendering (SSR) support, you can of course serve plain HTML from the server but currently the library doesn't support hydrating an existing DOM tree, you'll need to replace the whole tree with a new one (should be a fast operation in modern browsers but you'll have to measure for yourself).
+- 👍 [Reasonably fast diffing algorithm](https://rawgit.com/krausest/js-framework-benchmark/master/webdriver-ts-results/table.html). **Note this [shouldn't  mean your app will be auto-magically faster](https://github.com/facebook/react/issues/10703)**.
+- 👍 Very accurate diffing algorithm. The library will infer the minimum number of operations (insertion, move, deletion) to update DOM elements.
+- 👍 Non opinionated virtual DOM library. The library comes with a minimal/low-level definition of the concept of Component. If you're looking to build your own abstraction on top of the library, this is your thing.
 
 ## Install
 
