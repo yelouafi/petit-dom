@@ -101,19 +101,19 @@ function removeChildren(
   }
 }
 
-export function unmount(ch) {
+export function unmount(ch, domNode = ch._node) {
   if (isArray(ch)) {
     for (var i = 0; i < ch.length; i++) {
       unmount(ch[i]);
     }
   } else if (ch._vnode === true) {
     if (isComponent(ch.type)) {
-      ch.type.unmount(ch._node);
+      ch.type.unmount(domNode);
     } else if (
       typeof ch.type === "function" &&
       isComponent(ch.type.prototype)
     ) {
-      ch._data.unmount(ch._node);
+      ch._data.unmount(domNode);
     } else if (ch.content != null) {
       unmount(ch.content);
     }
@@ -231,10 +231,13 @@ export function patch(newch, oldch, parent) {
     }
   } else {
     childNode = mount(newch);
+    const oldNode = oldch._node;
     if (parent) {
       parent.replaceChild(childNode, oldch._node);
+      // can be used as a reference point
+      oldch._node = childNode;
     }
-    unmount(oldch);
+    unmount(oldch, oldNode);
   }
 
   newch._node = childNode;

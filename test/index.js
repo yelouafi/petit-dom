@@ -11,3 +11,5 @@ import "./patch.test";
 import "./select.test.js";
 import "./range.test.js";
 import "./utils.test";
+
+import "./bug-reports.test";
