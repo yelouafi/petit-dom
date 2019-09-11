@@ -258,7 +258,7 @@ function patchContent(parent, content, oldContent) {
 }
 
 function canPatch(v1, v2) {
-  return v1.key === v2.key;
+  return (v1.key == null && v2.key == null) || v1.key === v2.key;
 }
 
 export function diffChildren(
@@ -348,7 +348,7 @@ export function diffChildren(
       var upperLimit = k + oldRem;
       newStart = k;
       while (newStart < upperLimit) {
-        patch(children[newStart++], oldChildren[oldStart++]);
+        patch(children[newStart++], oldChildren[oldStart++], parent);
       }
       oldCh = oldChildren[oldEnd];
       appendChildren(
@@ -375,7 +375,7 @@ export function diffChildren(
       upperLimit = k + newRem;
       oldStart = k;
       while (oldStart < upperLimit) {
-        patch(children[newStart++], oldChildren[oldStart++]);
+        patch(children[newStart++], oldChildren[oldStart++], parent);
       }
       removeChildren(parent, oldChildren, oldStart, oldEnd);
       return;
