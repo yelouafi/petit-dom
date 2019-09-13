@@ -3,8 +3,11 @@
   <script type="module">
     import { h, patch, mount } from '../../src/index.js'
 
+    function Box({ title }, content) {
+      return h('div', null, h('h1', null, title), h('p', null, content));
+    }
+    const vnode = h('div', null, h(Box, { title: 'Fancy Box' }, 'content'));
 
-    var vnode = h("h1", null, "Hello world")
     const root = document.querySelector('#app-root')
     root.appendChild(mount(vnode))
 

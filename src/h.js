@@ -1,81 +1,34 @@
-import { EMPTYO, EMPTYAR, isArray, isVNode } from "./utils";
+import { EMPTY_OBJECT, maybeFlattenArray } from "./utils.js";
 
-export function h(type, props, contArg) {
-  var content,
-    args,
-    i,
-    isSVG = false;
-  var len = arguments.length - 2;
+const isValidComponentType = c =>
+  c != null && c.mount != null && c.patch != null && c.unmount != null;
 
-  if (typeof type !== "string") {
-    if (len === 1) {
-      content = contArg;
-    } else if (len > 1) {
-      args = Array(len);
-      for (i = 0; i < len; i++) {
-        args[i] = arguments[i + 2];
-      }
-      content = args;
-    }
-  } else {
-    isSVG = type === "svg";
-    if (len === 1) {
-      if (isArray(contArg)) {
-        content = maybeFlatten(contArg, isSVG);
-      } else if (isVNode(contArg)) {
-        contArg.isSVG = isSVG;
-        content = [contArg];
-      } else {
-        content = [{ _text: contArg == null ? "" : contArg }];
-      }
-    } else if (len > 1) {
-      args = Array(len);
-      for (i = 0; i < len; i++) {
-        args[i] = arguments[i + 2];
-      }
-      content = maybeFlatten(args, isSVG);
-    } else {
-      content = EMPTYAR;
-    }
+export function h(type, props = EMPTY_OBJECT, ...children) {
+  const key = props != null ? props.key : null;
+  if (typeof type === "string") {
+    return {
+      _IS_VELEMENT_: true,
+      type,
+      key,
+      props,
+      children: maybeFlattenArray(children)
+    };
+  } else if (typeof type === "function") {
+    return {
+      _IS_VFUNCTION_: true,
+      type,
+      key,
+      props,
+      children
+    };
+  } else if (isValidComponentType(type)) {
+    return {
+      _IS_VCOMPONENT_: true,
+      type,
+      key,
+      props,
+      children
+    };
   }
-
-  return {
-    _vnode: true,
-    isSVG,
-    type,
-    key: (props && props.key) || null,
-    props: props || EMPTYO,
-    content
-  };
-}
-
-export function maybeFlatten(arr, isSVG) {
-  for (var i = 0; i < arr.length; i++) {
-    var ch = arr[i];
-    if (isArray(ch)) {
-      return flattenChildren(arr, i, arr.slice(0, i), isSVG);
-    } else if (!isVNode(ch)) {
-      arr[i] = { _text: ch == null ? "" : ch };
-    } else if (isSVG && !ch.isSVG) {
-      ch.isSVG = true;
-    }
-  }
-  return arr;
-}
-
-function flattenChildren(children, start, arr, isSVG) {
-  for (var i = start; i < children.length; i++) {
-    var ch = children[i];
-    if (isArray(ch)) {
-      flattenChildren(ch, 0, arr, isSVG);
-    } else if (isVNode(ch)) {
-      if (isSVG && !ch.isSVG) {
-        ch.isSVG = true;
-      }
-      arr.push(ch);
-    } else {
-      arr.push({ _text: ch == null ? "" : ch });
-    }
-  }
-  return arr;
+  throw new Error("h: Invalid type!");
 }

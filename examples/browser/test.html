@@ -1,0 +1,26 @@
+<body>
+  <div id="app-root"></div>
+  <script type="module">
+    import { h, patch, mount } from '../../src/index.js'
+
+
+
+    function Box(props, content) {
+
+      return h("h1", { title: props.title }, content);
+    }
+
+    const vnode = h(Box, { title: "box title" }, "box content");
+    const node = mount(vnode); // renderCalls = 1
+    document.getElementById('app-root').appendChild(node)
+
+    const vnode2 = h(Box, { title: "another box title" }, "another box content");
+    patch(vnode2, vnode, node); // renderCalls = 2
+
+    const vnode3 = h(Box, { title: "another box title" }, "another box content");
+    patch(vnode3, vnode2, node);
+
+
+
+  </script>
+</body>
