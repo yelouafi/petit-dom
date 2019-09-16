@@ -1,16 +1,9 @@
 <body>
-  <div id="app-root"></div>
+  <div id="root"></div>
   <script type="module">
-    import { h, patch, mount } from '../../src/index.js'
+    import { h, render } from "../../src/index.js";
 
-
-    var vnode = h("h1", null, "Hello world")
-    const root = document.querySelector('#app-root')
-    root.appendChild(mount(vnode))
-
-
-
-
-
+    const root = document.getElementById("root");
+    render(h("h1", null, "Hello world"), root);
   </script>
 </body>
