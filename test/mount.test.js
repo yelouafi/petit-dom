@@ -59,8 +59,8 @@ test("element with multiple children", assert => {
 });
 
 test("render functions", assert => {
-  function Box(props, content) {
-    return h("h1", { title: props.title }, content);
+  function Box(props) {
+    return h("h1", { title: props.title }, props.children);
   }
 
   const vnode = h(Box, { title: "box title" }, "box content");

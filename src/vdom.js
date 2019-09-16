@@ -1,9 +1,8 @@
-import { isVLeaf, isVElement, indexOf, isVFunction } from "./utils.js";
-
+import { isVLeaf, isVElement, indexOf, isVComponent } from "./utils.js";
 import { diff, INSERTION, DELETION, PATCH } from "./diff.js";
 
-const SVG_NS = "http://www.w3.org/2000/svg";
-const INTERACTIVE_PROPS = {
+var SVG_NS = "http://www.w3.org/2000/svg";
+var INTERACTIVE_PROPS = {
   selected: true,
   value: true,
   checked: true,
@@ -13,25 +12,16 @@ const INTERACTIVE_PROPS = {
   TODO: activate full namespaced attributes (not supported in JSX)
   const XML_NS = "http://www.w3.org/XML/1998/namespace"
 **/
-const XLINK_NS = "http://www.w3.org/1999/xlink";
-const NS_ATTRS = {
+var XLINK_NS = "http://www.w3.org/1999/xlink";
+var NS_ATTRS = {
   show: XLINK_NS,
   actuate: XLINK_NS,
   href: XLINK_NS
 };
 
-const DEFAULT_ENV = {
+var DEFAULT_ENV = {
   isSvg: false
 };
-
-function shallowCompare(p1, p2, c1, c2) {
-  if (c1 !== c2) return true;
-
-  for (var key in p1) {
-    if (p1[key] !== p2[key]) return true;
-  }
-  return false;
-}
 
 export function mount(vnode, env = DEFAULT_ENV) {
   if (vnode === null) {
@@ -40,7 +30,7 @@ export function mount(vnode, env = DEFAULT_ENV) {
     return document.createTextNode(String(vnode));
   } else if (isVElement(vnode)) {
     var node;
-    var { type, props, children } = vnode;
+    var { type, attributes, children } = vnode;
     if (type === "svg" && !env.isSvg) {
       env = Object.assign({}, env, { isSVG: true });
     }
@@ -51,18 +41,20 @@ export function mount(vnode, env = DEFAULT_ENV) {
     } else {
       node = document.createElementNS(SVG_NS, type);
     }
-    delayedProps = setAttributes(node, props, undefined, env.isSVG);
+    delayedProps = setAttributes(node, attributes, undefined, env.isSVG);
     mountChildren(node, children, 0, children.length - 1, null, env);
     if (delayedProps != null) {
-      setProps(node, props, undefined, delayedProps);
+      setProps(node, attributes, undefined, delayedProps);
     }
     return node;
-  } else if (isVFunction(vnode)) {
-    ({ type, props, children } = vnode);
-    var renderedVNode = type(props, children);
-    node = mount(renderedVNode, env);
-    vnode._renderedVNode = renderedVNode;
-    return node;
+  } else if (isVComponent(vnode)) {
+    var { component, props } = vnode;
+    var vnodeState = component.mount(props, env);
+    vnode._state = vnodeState;
+    return vnodeState.node;
+  }
+  if (vnode === undefined) {
+    throw new Error("mount: vnode is undefined!");
   }
 
   throw new Error("mount: Invalid Vnode!");
@@ -97,6 +89,7 @@ function setProps(el, props, oldProps, keys) {
 function setAttributes(domElement, newAttrs, oldAttrs, isSVG) {
   var props = [];
   for (var key in newAttrs) {
+    /* eslint-disable no-prototype-builtins */
     if (key.startsWith("on") || INTERACTIVE_PROPS.hasOwnProperty(key)) {
       props.push(key);
       continue;
@@ -146,13 +139,26 @@ function removeChildren(
   }
   while (start <= end) {
     var vnode = children[start];
-    if (!cleared) parentDomNode.removeChild(childDomNodes[start]);
+    var domNode = childDomNodes[start];
+    if (!cleared) parentDomNode.removeChild(domNode);
     start++;
-    unmount(vnode);
+    unmount(vnode, domNode);
   }
 }
 
-export function unmount() {}
+export function unmount(vnode, domNode, env) {
+  if (vnode == null || isVLeaf(vnode)) {
+    return;
+  }
+  if (isVElement(vnode)) {
+    var childNodes = Array.from(domNode.childNodes);
+    for (var i = 0; i < vnode.children.length; i++) {
+      unmount(vnode.children[i], childNodes[i], env);
+    }
+  } else if (isVComponent(vnode)) {
+    vnode.component.unmount(vnode._state, domNode, env);
+  }
+}
 
 export function patch(newVNode, oldVNode, domNode, env = DEFAULT_ENV) {
   if (oldVNode === newVNode) {
@@ -172,51 +178,40 @@ export function patch(newVNode, oldVNode, domNode, env = DEFAULT_ENV) {
     }
     var delayedProps = setAttributes(
       domNode,
-      newVNode.props,
-      oldVNode.props,
+      newVNode.attributes,
+      oldVNode.attributes,
       env.isSVG
     );
 
     patchChildren(domNode, newVNode.children, oldVNode.children, env);
     if (delayedProps != null) {
-      setProps(domNode, newVNode.props, oldVNode.props, delayedProps);
+      setProps(domNode, newVNode.attributes, oldVNode.attributes, delayedProps);
     }
     return domNode;
   } else if (
-    isVFunction(newVNode) &&
-    isVFunction(oldVNode) &&
-    newVNode.type === oldVNode.type
+    isVComponent(newVNode) &&
+    isVComponent(oldVNode) &&
+    newVNode.component === oldVNode.component
   ) {
-    var shouldUpdateFn = newVNode.type.shouldUpdate;
-    if (shouldUpdateFn == null) {
-      shouldUpdateFn = shallowCompare;
-    }
-    if (
-      shouldUpdateFn(
-        newVNode.props,
-        oldVNode.props,
-        newVNode.children,
-        oldVNode.children
-      )
-    ) {
-      var newRenderedVNode = newVNode.type(newVNode.props, newVNode.children);
-      newVNode._renderedVNode = newRenderedVNode;
-      return patch(newRenderedVNode, oldVNode._renderedVNode, domNode, env);
-    } else {
-      newVNode._renderedVNode = oldVNode._renderedVNode;
-      return domNode;
-    }
+    newVNode._state = newVNode.component.patch(
+      newVNode.props,
+      oldVNode.props,
+      oldVNode._state,
+      env
+    );
+    return newVNode._state.node;
   } else {
     return mount(newVNode, env);
   }
 }
 
-function patchInPlace(newVNode, oldVNode, domNode, parentDomNode, env) {
+export function patchInPlace(newVNode, oldVNode, domNode, parentDomNode, env) {
   var newDomNode = patch(newVNode, oldVNode, domNode, env);
   if (newDomNode != domNode) {
     parentDomNode.replaceChild(newDomNode, domNode);
-    unmount(oldVNode);
+    unmount(oldVNode, domNode, env);
   }
+  return newDomNode;
 }
 
 function canPatch(newVNode, oldVNode) {
@@ -231,7 +226,7 @@ function patchChildren(parentDomNode, newChildren, oldChildren, env) {
   var newEnd = newChildren.length - 1;
   var oldStart = 0;
   var oldEnd = oldChildren.length - 1;
-  var newVNode, oldVNode;
+  var newVNode, oldVNode, domNode;
   var childDomNodes = Array.from(parentDomNode.childNodes);
 
   /**
@@ -391,6 +386,7 @@ function patchChildren(parentDomNode, newChildren, oldChildren, env) {
 
   // fast case: difference between the 2 sequences is only one item
   if (oldStart === oldEnd) {
+    domNode = childDomNodes[oldStart];
     mountChildren(
       parentDomNode,
       newChildren,
@@ -399,8 +395,8 @@ function patchChildren(parentDomNode, newChildren, oldChildren, env) {
       childDomNodes[oldStart],
       env
     );
-    parentDomNode.removeChild(childDomNodes[oldStart]);
-    unmount(oldChildren[oldStart]);
+    parentDomNode.removeChild(domNode);
+    unmount(oldChildren[oldStart], domNode, env);
     return;
   }
   if (newStart === newEnd) {
@@ -494,9 +490,10 @@ function applyDiff(
       oldIndex++;
     } else if (op === DELETION) {
       oldVNode = oldChildren[oldIndex];
+      domNode = childDomNodes[oldIndex];
       if (oldVNode !== undefined) {
-        parentDomNode.removeChild(childDomNodes[oldIndex]);
-        unmount(oldVNode);
+        parentDomNode.removeChild(domNode);
+        unmount(oldVNode, domNode, env);
       }
       oldIndex++;
     }

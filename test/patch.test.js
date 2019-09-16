@@ -238,9 +238,9 @@ test("patch keyed children", assert => {
 test("patch render functions", assert => {
   //let renderCalls = 0;
 
-  function Box(props, content) {
+  function Box(props) {
     //renderCalls++;
-    return h("h1", { title: props.title }, content);
+    return h("h1", { title: props.title }, props.children);
   }
 
   const vnode = h(Box, { title: "box title" }, "box content");

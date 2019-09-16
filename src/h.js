@@ -1,4 +1,5 @@
 import { EMPTY_OBJECT, maybeFlattenArray } from "./utils.js";
+import { createRenderComponent } from "./createRenderComponent.js";
 
 const isValidComponentType = c =>
   c != null && c.mount != null && c.patch != null && c.unmount != null;
@@ -10,25 +11,36 @@ export function h(type, props = EMPTY_OBJECT, ...children) {
       _IS_VELEMENT_: true,
       type,
       key,
-      props,
+      attributes: props,
       children: maybeFlattenArray(children)
-    };
-  } else if (typeof type === "function") {
-    return {
-      _IS_VFUNCTION_: true,
-      type,
-      key,
-      props,
-      children
     };
   } else if (isValidComponentType(type)) {
     return {
       _IS_VCOMPONENT_: true,
-      type,
+      component: type,
       key,
-      props,
-      children
+      props: Object.assign({}, props, { children })
+    };
+  } else if (typeof type === "function") {
+    return {
+      _IS_VCOMPONENT_: true,
+      component: createFunctionComponent(type),
+      key,
+      props: Object.assign({}, props, { children })
     };
   }
   throw new Error("h: Invalid type!");
+}
+
+function createFunctionComponent(renderFunction) {
+  var component = renderFunction.$$petitDomFunctionComponent$$;
+  if (component == null) {
+    component = renderFunction.$$petitDomFunctionComponent$$ = createRenderComponent(
+      {
+        render: renderFunction,
+        shouldUpdate: renderFunction.shouldUpdate
+      }
+    );
+  }
+  return component;
 }
