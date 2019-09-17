@@ -1,17 +1,9 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <title>petit-dom Hello example</title>
-</head>
 <body>
+  <div id="root"></div>
+  <script type="module">
+    import { h, render } from "../../src/index.js";
 
-  <script src="../../dist/petit-dom.dev.js"></script>
-  <script>
-    const {h, mount} = petitDom
-
-    const vel = h('p', null, 'Hello world')
-    document.body.appendChild(mount(vel))
+    const root = document.getElementById("root");
+    render(h("h1", null, "Hello world"), root);
   </script>
 </body>
-
-</html>

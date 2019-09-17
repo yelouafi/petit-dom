@@ -1,24 +1,10 @@
-export const EMPTYO = {};
-export const EMPTYAR = [];
-export const isArray = Array.isArray;
-export const isVNode = c => c && (c._vnode != null || c._text != null);
-export const isComponent = c => c && c.mount && c.patch && c.unmount;
+export const EMPTY_OBJECT = {};
 
-export const LOG = (...args) => {
-  /*eslint-disable no-console*/
-  console.log(...args);
-};
-
-export function findK(ktr, j) {
-  var lo = 1;
-  var hi = ktr.length - 1;
-  while (lo <= hi) {
-    var mid = Math.ceil((lo + hi) / 2);
-    if (j < ktr[mid]) hi = mid - 1;
-    else lo = mid + 1;
-  }
-  return lo;
-}
+export const isVLeaf = c =>
+  typeof c === "string" || typeof c === "number" || typeof c === "boolean";
+export const isVElement = c => c != null && c._IS_VELEMENT_;
+export const isVFunction = c => c != null && c._IS_VFUNCTION_;
+export const isVComponent = c => c != null && c._IS_VCOMPONENT_;
 
 export function indexOf(a, suba, aStart, aEnd, subaStart, subaEnd, eq) {
   var j = subaStart,
@@ -37,4 +23,26 @@ export function indexOf(a, suba, aStart, aEnd, subaStart, subaEnd, eq) {
     aStart++;
   }
   return -1;
+}
+
+export function maybeFlattenArray(array) {
+  for (var i = 0; i < array.length; i++) {
+    var item = array[i];
+    if (Array.isArray(item)) {
+      return flattenArray(array, array.slice(0, i), i);
+    }
+  }
+  return array;
+}
+
+function flattenArray(sourceArray, targetArray, startIndex) {
+  for (var i = startIndex; i < sourceArray.length; i++) {
+    var item = sourceArray[i];
+    if (Array.isArray(item)) {
+      flattenArray(item, targetArray, 0);
+    } else {
+      targetArray.push(item);
+    }
+  }
+  return targetArray;
 }

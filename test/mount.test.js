@@ -2,7 +2,7 @@ import test from "tape";
 import { h, mount } from "../src";
 
 test("text node", assert => {
-  const vnode = { _text: "raw text" };
+  const vnode = "raw text";
   const node = mount(vnode);
   assert.equal(node.nodeName, "#text");
   assert.equal(node.nodeValue, "raw text");
@@ -17,8 +17,6 @@ test("simple element", assert => {
     "span content"
   );
   const node = mount(vnode);
-  assert.equal(vnode._node, node);
-  assert.equal(vnode.content[0]._node, node.firstChild);
 
   assert.equal(node.nodeName, "SPAN");
   //assert.equal(node.dataset.type, "span");
@@ -30,49 +28,43 @@ test("simple element", assert => {
 });
 
 test("element with multiple children", assert => {
-  var vspan, vinput;
-
   const vnode = h(
     "div",
     null,
-    (vspan = h("span", null, "span text")),
-    (vinput = h("input", { type: "number" })),
+    h("span", null, "span text"),
+    h("input", { type: "number" }),
     "raw text"
   );
 
   const node = mount(vnode);
-  assert.equal(vnode._node, node);
 
   assert.equal(node.nodeName, "DIV");
   assert.equal(node.childNodes.length, 3);
-  for (var i = 0; i < vnode.content.length; i++) {
-    var ch = vnode.content[i];
-    assert.equal(ch._node, node.childNodes[i]);
-  }
 
-  assert.equal(vspan._node.nodeName, "SPAN");
-  assert.equal(vspan._node.childNodes.length, 1);
-  assert.equal(vspan._node.firstChild.nodeValue, "span text");
+  const span = node.childNodes[0];
+  assert.equal(span.nodeName, "SPAN");
+  assert.equal(span.childNodes.length, 1);
+  assert.equal(span.firstChild.nodeValue, "span text");
 
-  assert.equal(vinput._node.nodeName, "INPUT");
-  assert.equal(vinput._node.childNodes.length, 0);
-  assert.equal(vinput._node.type, "number");
+  const input = node.childNodes[1];
+  assert.equal(input.nodeName, "INPUT");
+  assert.equal(input.childNodes.length, 0);
+  assert.equal(input.type, "number");
 
-  const vtext = vnode.content[2];
-  assert.equal(vtext._node.nodeName, "#text");
-  assert.equal(vtext._node.nodeValue, "raw text");
+  const text = node.childNodes[2];
+  assert.equal(text.nodeName, "#text");
+  assert.equal(text.nodeValue, "raw text");
 
   assert.end();
 });
 
 test("render functions", assert => {
-  function Box(props, content) {
-    return h("h1", { title: props.title }, content);
+  function Box(props) {
+    return h("h1", { title: props.title }, props.children);
   }
 
   const vnode = h(Box, { title: "box title" }, "box content");
   const node = mount(vnode);
-  assert.equal(vnode._node, node);
 
   assert.equal(node.nodeName, "H1");
   assert.equal(node.title, "box title");
@@ -80,7 +72,7 @@ test("render functions", assert => {
   assert.equal(node.firstChild.nodeValue, "box content");
   assert.end();
 });
-
+/*
 test("Component", assert => {
   const MyComponent = {
     mount: (props, content) => {
@@ -105,7 +97,7 @@ test("Component", assert => {
 
   assert.end();
 });
-
+*/
 test("svg elements", assert => {
   const onclick = () => {};
 

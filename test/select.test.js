@@ -32,7 +32,7 @@ test("select.selectedIndex (single selection)", assert => {
     h("option", { value: "love" }, "Love")
   );
 
-  patch(vnode2, vnode);
+  patch(vnode2, vnode, node);
   assert.equal(node.selectedIndex, 0, "selected index should be 0");
   assert.equal(node.options[0].selected, true, "option 0 should be selected");
   assert.equal(
@@ -79,7 +79,7 @@ test("select.value (single selection)", assert => {
     h("option", { value: "love" }, "Love")
   );
 
-  patch(vnode2, vnode);
+  patch(vnode2, vnode, node);
   assert.equal(node.selectedIndex, 0, "selected index should be 0");
   assert.equal(node.options[0].selected, true, "option 0 should be selected");
   assert.equal(
@@ -135,7 +135,7 @@ test("select with multiple = true", assert => {
     h("option", { value: "pray", selected: true }, "Pray"),
     h("option", { value: "love", selected: false }, "Love")
   );
-  patch(vnode2, vnode);
+  patch(vnode2, vnode, node);
 
   assert.equal(
     node.selectedOptions.length,

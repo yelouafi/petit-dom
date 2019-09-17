@@ -21,7 +21,7 @@ test("range input", assert => {
     max: "2",
     step: "0.05"
   });
-  patch(vnode2, vnode);
+  patch(vnode2, vnode, node);
   assert.equal(node.value, "1.5", "range value should be 1.5");
   assert.end();
 });
