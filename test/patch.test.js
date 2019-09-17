@@ -370,3 +370,51 @@ test("issues #26: applyDiff fails with blank strings", assert => {
   assert.pass("Doesn't blow up");
   assert.end();
 });
+
+test("issues #27: New DOM-tree is not synced with vdom-tree", assert => {
+  var oldVnode = h("div", {}, [
+    h("p", {}, [
+      "Text",
+      h("code", {}, ["Text"]),
+      "Text",
+      h("code", {}, ["Text"]),
+      "Text"
+    ]),
+    h("div", {}, [])
+  ]);
+
+  var newVnode = h("div", {}, [
+    h("p", {}, [h("a", {}, ["Text"])]),
+    "Text",
+    h("p", {}, [h("a", {}, ["Text"])]),
+    "Text",
+    h("p", {}, ["Text", h("a", {}, ["Text"]), "Text"]),
+    h("div", {}, [])
+  ]);
+
+  var node = mount(oldVnode);
+  node = patch(newVnode, oldVnode, node);
+
+  function checkSimlilarity(vdomNode, domnode) {
+    if (domnode.nodeType === 3) {
+      assert.equal(domnode.textContent, vdomNode, "Text should be the same");
+      return;
+    }
+    assert.equal(
+      domnode.childNodes.length,
+      vdomNode.children.length,
+      "Children length should match"
+    );
+    assert.equal(
+      domnode.tagName.toLowerCase(),
+      vdomNode.type.toLowerCase(),
+      "Tag names should match"
+    );
+    for (let i = 0; i < vdomNode.children.length; i++) {
+      checkSimlilarity(vdomNode.children[i], domnode.childNodes[i]);
+    }
+  }
+
+  checkSimlilarity(newVnode, node);
+  assert.end();
+});
