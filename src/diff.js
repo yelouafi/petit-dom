@@ -1,6 +1,6 @@
-export const PATCH = "="; //2;
-export const INSERTION = "+"; // 4;
-export const DELETION = "-"; //8;
+export const PATCH = 2; // =;
+export const INSERTION = 4; // +;
+export const DELETION = 8; // -;
 
 export function diff(
   newArray,
