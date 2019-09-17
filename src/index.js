@@ -1,6 +1,6 @@
 export { h } from "./h.js";
 export { mount, patch, unmount } from "./vdom.js";
-import { mount, patchInPlace } from "./vdom.js";
+import { mount, patch, unmount } from "./vdom.js";
 
 export function render(vnode, parentDomNode) {
   var state = parentDomNode.$$petitDomState$$;
@@ -9,7 +9,11 @@ export function render(vnode, parentDomNode) {
     domNode = mount(vnode);
     parentDomNode.appendChild(domNode);
   } else {
-    domNode = patchInPlace(vnode, state.vnode, state.domNode, parentDomNode);
+    domNode = patch(vnode, state.vnode, state.domNode);
+    if (domNode !== state.domNode) {
+      parentDomNode.replaceChild(domNode, state.domNode);
+      unmount(state.vnode);
+    }
   }
   parentDomNode.$$petitDomState$$ = { vnode, domNode };
 }

@@ -205,11 +205,20 @@ export function patch(newVNode, oldVNode, domNode, env = DEFAULT_ENV) {
   }
 }
 
-export function patchInPlace(newVNode, oldVNode, domNode, parentDomNode, env) {
-  var newDomNode = patch(newVNode, oldVNode, domNode, env);
-  if (newDomNode != domNode) {
-    parentDomNode.replaceChild(newDomNode, domNode);
-    unmount(oldVNode, domNode, env);
+function patchInPlace(
+  newVNode,
+  oldVNode,
+  parentDomNode,
+  childDomNodes,
+  index,
+  env
+) {
+  var oldDomNode = childDomNodes[index];
+  var newDomNode = patch(newVNode, oldVNode, oldDomNode, env);
+  if (newDomNode != oldDomNode) {
+    childDomNodes[index] = newDomNode;
+    parentDomNode.replaceChild(newDomNode, oldDomNode);
+    unmount(oldVNode, oldDomNode, env);
   }
   return newDomNode;
 }
@@ -247,8 +256,9 @@ function patchChildren(parentDomNode, newChildren, oldChildren, env) {
       patchInPlace(
         newVNode,
         oldVNode,
-        childDomNodes[oldStart],
         parentDomNode,
+        childDomNodes,
+        oldStart,
         env
       );
       newStart++;
@@ -261,8 +271,9 @@ function patchChildren(parentDomNode, newChildren, oldChildren, env) {
       patchInPlace(
         newVNode,
         oldVNode,
-        childDomNodes[oldEnd],
         parentDomNode,
+        childDomNodes,
+        oldEnd,
         env
       );
       oldEnd--;
@@ -324,8 +335,9 @@ function patchChildren(parentDomNode, newChildren, oldChildren, env) {
         patchInPlace(
           newChildren[newStart],
           oldChildren[oldStart],
-          childDomNodes[oldStart],
           parentDomNode,
+          childDomNodes,
+          oldStart,
           env
         );
         newStart++;
@@ -366,8 +378,9 @@ function patchChildren(parentDomNode, newChildren, oldChildren, env) {
         patchInPlace(
           newChildren[newStart],
           oldChildren[oldStart],
-          childDomNodes[oldEnd],
           parentDomNode,
+          childDomNodes,
+          oldEnd,
           env
         );
         newStart++;
@@ -451,8 +464,9 @@ function applyDiff(
       patchInPlace(
         newChildren[newIndex],
         oldChildren[oldIndex],
-        childDomNodes[oldIndex],
         parentDomNode,
+        childDomNodes,
+        oldIndex,
         env
       );
       newIndex++;
