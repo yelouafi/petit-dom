@@ -34,7 +34,7 @@ render(<h1>Hello again</h1>, parentNode);
 
 You can also use raw `h` function calls if you want, see examples folder for usage.
 
-petit-dom has supports also render functions (aka functional components).
+petit-dom also supports render functions
 
 ```js
 /* @jsx h */
@@ -43,7 +43,7 @@ import { h, render } from "petit-dom";
 function Box(props) {
   return (
     <div>
-      <h1 onclick={props.onclick}>{props.title}</h1>
+      <h1>{props.title}</h1>
       <p>{props.children}</p>
     </div>
   );
@@ -55,8 +55,7 @@ render(<Box title="Fancy box">Put your content here</Box>, parentNode);
 render functions behave like React pure components. Patching with the same
 arguments will not cause any re-rendering. You can also attach a `shouldUpdate`
 function to the render function to customize the re-rendering behavior (By default
-props are tested for shallow equality and content is tested for reference equality,
-the lib assumes the same set of keys is provided inside props).
+props are tested for shallow equality).
 
 ## Custom components
 
@@ -74,8 +73,8 @@ with the following signature
 Each of the 3 functions (they are not methods, i.e. no `this`) will be called
 by the library at the moment suggested by its name:
 
-- `mount` is called when the library need to create a new Node to be inserted at some
-  palce into the DOM.
+- `mount` is called when the library needs to create a new DOM Node to be inserted at some
+  palce into the DOM tree.
 
 - `patch` is called when the library needs to update the previously created DOM with
   new props.
@@ -83,7 +82,7 @@ by the library at the moment suggested by its name:
 - `unmount` is called after the DOM node has been removed from DOM tree.
 
 `props`, `newProps` and `oldProps` all refer to the properties provided to the `h` function
-(included via JSX). The children are stored in the `children` property of the props object.
+(or via JSX). The children are stored in the `children` property of the props object.
 
 `stateRef` is an object provided to persist any needed data between different invocations. As
 mentioned, the 3 functions above are not to be treated as instance methods (no `this`) but as
@@ -91,11 +90,11 @@ ordinary functions. Any instance specific data must be stored in the `stateRef` 
 
 `domNode` is obviously the DOM node to be mounted or patched.
 
-`env` is used internally by the mount/patch process; \*\*This argument must be forwareded to all
-nested `mount`, `patch` and `unmount` calls).
+`env` is used internally by the mount/patch process; **This argument must be forwarded to all
+nested `mount`, `patch` and `unmount` calls (see below example)**.
 
-Custom components are pretty raw, but they are also more flexible and allow
-implementing higher-level solution on top. For example, render functions are implemented
+Custom components are pretty raw, but they are also flexible and allow
+implementing higher-level solution. For example, render functions are implemented
 on top of them.
 
 ```js
@@ -126,7 +125,7 @@ function createRenderComponent({ render, shouldUpdate = shallowCompare }) {
 
 - `h(type, props, ...children)`
 
-Creates virtual nodes.
+Creates a virtual node.
 
 - `type`: a string (HTML or SVG tag name), or a custom component (see above)
 
@@ -146,14 +145,14 @@ custom components:
 - `mount(vnode, env)`
 
 Creates a real DOM node as specified by `vnode`. The `env` argument is optional (e.g. when
-called from top level), but typically you'll just have to forward something passed from
+called from top level), but typically you'll have to forward something passed from
 upstream (e.g. when called inside a custom component).
 
 - `patch(newVNode, oldVNode, domNode, env)`
 
-Updates (or eventuall replaces) `domNode` based on the difference between `newVNode` and `oldVNode`.
+Updates (or eventually replaces) `domNode` based on the difference between `newVNode` and `oldVNode`.
 
 - `unmount(vnode, domNode, env)`
 
-This is called after `domNode` has been retired from the DOM tree. This will be typically
-used by custom components to implement cleanup logic.
+This is called after `domNode` has been retired from the DOM tree. This is typically
+needed by custom components to implement cleanup logic.
