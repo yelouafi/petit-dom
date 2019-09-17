@@ -21,15 +21,7 @@ export function diff(
     oldEnd
   );
   if (diff != null) return diff;
-  return diffWithMap(
-    newArray,
-    oldArray,
-    compareFn,
-    newStart,
-    newEnd,
-    oldStart,
-    oldEnd
-  );
+  return diffWithMap(newArray, oldArray, newStart, newEnd, oldStart, oldEnd);
 }
 
 /**
