@@ -49,15 +49,74 @@ export function mount(vnode, env = DEFAULT_ENV) {
     return node;
   } else if (isVComponent(vnode)) {
     var { component, props } = vnode;
-    var vnodeState = component.mount(props, env);
-    vnode._state = vnodeState;
-    return vnodeState.node;
+    vnode._state = {};
+    return component.mount(props, vnode._state, env);
   }
   if (vnode === undefined) {
     throw new Error("mount: vnode is undefined!");
   }
 
   throw new Error("mount: Invalid Vnode!");
+}
+
+export function patch(newVNode, oldVNode, domNode, env = DEFAULT_ENV) {
+  if (oldVNode === newVNode) {
+    return domNode;
+  } else if (newVNode === null && newVNode === null) {
+    return domNode;
+  } else if (isVLeaf(newVNode) && isVLeaf(oldVNode)) {
+    domNode.nodeValue = String(newVNode);
+    return domNode;
+  } else if (
+    isVElement(newVNode) &&
+    isVElement(oldVNode) &&
+    newVNode.type === oldVNode.type
+  ) {
+    if (newVNode.type === "svg" && !env.isSvg) {
+      env = Object.assign({}, env, { isSVG: true });
+    }
+    var delayedProps = setAttributes(
+      domNode,
+      newVNode.attributes,
+      oldVNode.attributes,
+      env.isSVG
+    );
+
+    patchChildren(domNode, newVNode.children, oldVNode.children, env);
+    if (delayedProps != null) {
+      setProps(domNode, newVNode.attributes, oldVNode.attributes, delayedProps);
+    }
+    return domNode;
+  } else if (
+    isVComponent(newVNode) &&
+    isVComponent(oldVNode) &&
+    newVNode.component === oldVNode.component
+  ) {
+    newVNode._state = oldVNode._state;
+    return newVNode.component.patch(
+      newVNode.props,
+      oldVNode.props,
+      newVNode._state,
+      domNode,
+      env
+    );
+  } else {
+    return mount(newVNode, env);
+  }
+}
+
+export function unmount(vnode, domNode, env) {
+  if (vnode == null || isVLeaf(vnode)) {
+    return;
+  }
+  if (isVElement(vnode)) {
+    var childNodes = Array.from(domNode.childNodes);
+    for (var i = 0; i < vnode.children.length; i++) {
+      unmount(vnode.children[i], childNodes[i], env);
+    }
+  } else if (isVComponent(vnode)) {
+    vnode.component.unmount(vnode._state, domNode, env);
+  }
 }
 
 function mountChildren(
@@ -143,65 +202,6 @@ function removeChildren(
     if (!cleared) parentDomNode.removeChild(domNode);
     start++;
     unmount(vnode, domNode);
-  }
-}
-
-export function unmount(vnode, domNode, env) {
-  if (vnode == null || isVLeaf(vnode)) {
-    return;
-  }
-  if (isVElement(vnode)) {
-    var childNodes = Array.from(domNode.childNodes);
-    for (var i = 0; i < vnode.children.length; i++) {
-      unmount(vnode.children[i], childNodes[i], env);
-    }
-  } else if (isVComponent(vnode)) {
-    vnode.component.unmount(vnode._state, domNode, env);
-  }
-}
-
-export function patch(newVNode, oldVNode, domNode, env = DEFAULT_ENV) {
-  if (oldVNode === newVNode) {
-    return domNode;
-  } else if (newVNode === null && newVNode === null) {
-    return domNode;
-  } else if (isVLeaf(newVNode) && isVLeaf(oldVNode)) {
-    domNode.nodeValue = String(newVNode);
-    return domNode;
-  } else if (
-    isVElement(newVNode) &&
-    isVElement(oldVNode) &&
-    newVNode.type === oldVNode.type
-  ) {
-    if (newVNode.type === "svg" && !env.isSvg) {
-      env = Object.assign({}, env, { isSVG: true });
-    }
-    var delayedProps = setAttributes(
-      domNode,
-      newVNode.attributes,
-      oldVNode.attributes,
-      env.isSVG
-    );
-
-    patchChildren(domNode, newVNode.children, oldVNode.children, env);
-    if (delayedProps != null) {
-      setProps(domNode, newVNode.attributes, oldVNode.attributes, delayedProps);
-    }
-    return domNode;
-  } else if (
-    isVComponent(newVNode) &&
-    isVComponent(oldVNode) &&
-    newVNode.component === oldVNode.component
-  ) {
-    newVNode._state = newVNode.component.patch(
-      newVNode.props,
-      oldVNode.props,
-      oldVNode._state,
-      env
-    );
-    return newVNode._state.node;
-  } else {
-    return mount(newVNode, env);
   }
 }
 

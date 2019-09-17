@@ -26,7 +26,8 @@ export function h(type, props = EMPTY_OBJECT, ...children) {
       _IS_VCOMPONENT_: true,
       component: createFunctionComponent(type),
       key,
-      props: Object.assign({}, props, { children })
+      props: Object.assign({}, props, { children }),
+      _state: null
     };
   }
   throw new Error("h: Invalid type!");

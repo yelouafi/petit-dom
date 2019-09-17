@@ -9,55 +9,28 @@ function shallowCompare(p1, p2, c1, c2) {
   return false;
 }
 
-function mountRenderComponent(renderFunction, props, env) {
-  var renderedVNode = renderFunction(props);
-  var node = mount(renderedVNode, env);
-  return {
-    node,
-    renderedVNode
-  };
-}
-
-function patchRenderComponent(
-  renderFunction,
-  newProps,
-  oldProps,
-  oldState,
-  shouldUpdate,
-  env
-) {
-  if (!shouldUpdate(newProps, oldProps)) {
-    return oldState;
-  }
-  var renderedVNode = renderFunction(newProps);
-
-  var node = patch(renderedVNode, oldState.renderedVNode, oldState.node, env);
-  return {
-    node,
-    renderedVNode
-  };
-}
-
 export function createRenderComponent({
   render,
   shouldUpdate = shallowCompare
 }) {
   return {
-    mount(props, env) {
-      return mountRenderComponent(render, props, env);
+    mount(props, stateRef, env) {
+      var vnode = render(props);
+      stateRef.vnode = vnode;
+      return mount(vnode, env);
     },
-    patch(newProps, oldProps, oldState, env) {
-      return patchRenderComponent(
-        render,
-        newProps,
-        oldProps,
-        oldState,
-        shouldUpdate,
-        env
-      );
+    patch(newProps, oldProps, stateRef, domNode, env) {
+      if (!shouldUpdate(newProps, oldProps)) {
+        return domNode;
+      }
+      var newVNode = render(newProps);
+      var oldVNode = stateRef.vnode;
+      stateRef.vnode = newVNode;
+      return patch(newVNode, oldVNode, domNode, env);
     },
-    unmount(state, node, env) {
-      unmount(state.renderedVNode, node, env);
+    unmount(stateRef, domNode, env) {
+      stateRef.wasUnmounted = true;
+      unmount(stateRef.vnode, domNode, env);
     }
   };
 }
