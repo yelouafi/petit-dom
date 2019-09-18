@@ -123,17 +123,17 @@ function createRenderComponent({ render, shouldUpdate = shallowCompare }) {
 
 ## API
 
-- `h(type, props, ...children)`
+### `h(type, props, ...children)`
 
 Creates a virtual node.
 
 - `type`: a string (HTML or SVG tag name), or a custom component (see above)
 
 - `props`: in the case of HTML/SVG tags, this corresponds to the attributes/properties
-  to be set in the real DOM node. In the case of components, `{ ...props, children }` is
-  passed to the appropriate component function (`mount` or `patch`).
+to be set in the real DOM node. In the case of components, `{ ...props, children }` is
+passed to the appropriate component function (`mount` or `patch`).
 
-- `render(vnode, parentDom)`
+### `render(vnode, parentDom)`
 
 renders a virtual node into the DOM. The function will initially create a DOM node
 as specified the virtual node `vnode`. Subsequent calls will update the previous
@@ -142,17 +142,17 @@ DOM node (or replace it if it's a different tag).
 There are also lower level methods that are typically used when implementing
 custom components:
 
-- `mount(vnode, env)`
+### `mount(vnode, env)`
 
 Creates a real DOM node as specified by `vnode`. The `env` argument is optional (e.g. when
 called from top level), but typically you'll have to forward something passed from
 upstream (e.g. when called inside a custom component).
 
-- `patch(newVNode, oldVNode, domNode, env)`
+### `patch(newVNode, oldVNode, domNode, env)`
 
 Updates (or eventually replaces) `domNode` based on the difference between `newVNode` and `oldVNode`.
 
-- `unmount(vnode, domNode, env)`
+### `unmount(vnode, domNode, env)`
 
 This is called after `domNode` has been retired from the DOM tree. This is typically
 needed by custom components to implement cleanup logic.
