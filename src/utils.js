@@ -1,11 +1,3 @@
-export const EMPTY_OBJECT = {};
-
-export const isVLeaf = c =>
-  typeof c === "string" || typeof c === "number" || typeof c === "boolean";
-export const isVElement = c => c != null && c._IS_VELEMENT_;
-export const isVFunction = c => c != null && c._IS_VFUNCTION_;
-export const isVComponent = c => c != null && c._IS_VCOMPONENT_;
-
 export function indexOf(a, suba, aStart, aEnd, subaStart, subaEnd, eq) {
   var j = subaStart,
     k = -1;
