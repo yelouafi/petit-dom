@@ -94,46 +94,25 @@ ordinary functions. Any instance specific data must be stored in the `stateRef` 
 nested `mount`, `patch` and `unmount` calls (see below example)**.
 
 Custom components are pretty raw, but they are also flexible and allow
-implementing higher-level solution. For example, render functions are implemented
-on top of them.
+implementing higher-level solution (for example, render functions are implemented
+on top of them).
 
-```js
-function createRenderComponent({ render, shouldUpdate = shallowCompare }) {
-  return {
-    mount(props, stateRef, env) {
-      var vnode = render(props);
-      stateRef.vnode = vnode;
-      return mount(vnode, env);
-    },
-    patch(newProps, oldProps, stateRef, domNode, env) {
-      if (!shouldUpdate(newProps, oldProps)) {
-        return domNode;
-      }
-      var newVNode = render(newProps);
-      var oldVNode = stateRef.vnode;
-      stateRef.vnode = newVNode;
-      return patch(newVNode, oldVNode, domNode, env);
-    },
-    unmount(stateRef, domNode, env) {
-      unmount(stateRef.vnode, domNode, env);
-    }
-  };
-}
-```
+The examples folder contains simple (and partial) implementations of React like
+components and hooks using the custom component API.
 
 ## API
 
-- `h(type, props, ...children)`
+### `h(type, props, ...children)`
 
 Creates a virtual node.
 
 - `type`: a string (HTML or SVG tag name), or a custom component (see above)
 
 - `props`: in the case of HTML/SVG tags, this corresponds to the attributes/properties
-  to be set in the real DOM node. In the case of components, `{ ...props, children }` is
-  passed to the appropriate component function (`mount` or `patch`).
+to be set in the real DOM node. In the case of components, `{ ...props, children }` is
+passed to the appropriate component function (`mount` or `patch`).
 
-- `render(vnode, parentDom)`
+### `render(vnode, parentDom)`
 
 renders a virtual node into the DOM. The function will initially create a DOM node
 as specified the virtual node `vnode`. Subsequent calls will update the previous
@@ -142,17 +121,17 @@ DOM node (or replace it if it's a different tag).
 There are also lower level methods that are typically used when implementing
 custom components:
 
-- `mount(vnode, env)`
+### `mount(vnode, env)`
 
 Creates a real DOM node as specified by `vnode`. The `env` argument is optional (e.g. when
 called from top level), but typically you'll have to forward something passed from
 upstream (e.g. when called inside a custom component).
 
-- `patch(newVNode, oldVNode, domNode, env)`
+### `patch(newVNode, oldVNode, domNode, env)`
 
 Updates (or eventually replaces) `domNode` based on the difference between `newVNode` and `oldVNode`.
 
-- `unmount(vnode, domNode, env)`
+### `unmount(vnode, domNode, env)`
 
 This is called after `domNode` has been retired from the DOM tree. This is typically
 needed by custom components to implement cleanup logic.
