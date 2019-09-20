@@ -1,8 +1,9 @@
-import { isVLeaf, isVElement, indexOf, isVComponent } from "./utils.js";
+import { indexOf } from "./utils.js";
+import { isVNull, isVLeaf, isVElement, isVComponent } from "./h.js";
 import { diff, INSERTION, DELETION, PATCH } from "./diff.js";
 
-var SVG_NS = "http://www.w3.org/2000/svg";
-var INTERACTIVE_PROPS = {
+const SVG_NS = "http://www.w3.org/2000/svg";
+const INTERACTIVE_PROPS = {
   selected: true,
   value: true,
   checked: true,
@@ -12,25 +13,25 @@ var INTERACTIVE_PROPS = {
   TODO: activate full namespaced attributes (not supported in JSX)
   const XML_NS = "http://www.w3.org/XML/1998/namespace"
 **/
-var XLINK_NS = "http://www.w3.org/1999/xlink";
-var NS_ATTRS = {
+const XLINK_NS = "http://www.w3.org/1999/xlink";
+const NS_ATTRS = {
   show: XLINK_NS,
   actuate: XLINK_NS,
   href: XLINK_NS
 };
 
-var DEFAULT_ENV = {
+const DEFAULT_ENV = {
   isSvg: false
 };
 
 export function mount(vnode, env = DEFAULT_ENV) {
-  if (vnode === null) {
+  if (isVNull(vnode)) {
     return document.createComment("NULL");
   } else if (isVLeaf(vnode)) {
     return document.createTextNode(String(vnode));
   } else if (isVElement(vnode)) {
     var node;
-    var { type, attributes, children } = vnode;
+    var { type, props, children } = vnode;
     if (type === "svg" && !env.isSvg) {
       env = Object.assign({}, env, { isSVG: true });
     }
@@ -41,16 +42,15 @@ export function mount(vnode, env = DEFAULT_ENV) {
     } else {
       node = document.createElementNS(SVG_NS, type);
     }
-    delayedProps = setAttributes(node, attributes, undefined, env.isSVG);
+    delayedProps = setAttributes(node, props, undefined, env.isSVG);
     mountChildren(node, children, 0, children.length - 1, null, env);
     if (delayedProps != null) {
-      setProps(node, attributes, undefined, delayedProps);
+      setProps(node, props, undefined, delayedProps);
     }
     return node;
   } else if (isVComponent(vnode)) {
-    var { component, props } = vnode;
     vnode._state = {};
-    return component.mount(props, vnode._state, env);
+    return vnode.type.mount(vnode.props, vnode._state, env);
   }
   if (vnode === undefined) {
     throw new Error("mount: vnode is undefined!");
@@ -62,7 +62,7 @@ export function mount(vnode, env = DEFAULT_ENV) {
 export function patch(newVNode, oldVNode, domNode, env = DEFAULT_ENV) {
   if (oldVNode === newVNode) {
     return domNode;
-  } else if (newVNode === null && newVNode === null) {
+  } else if (isVNull(newVNode) && isVNull(newVNode)) {
     return domNode;
   } else if (isVLeaf(newVNode) && isVLeaf(oldVNode)) {
     domNode.nodeValue = String(newVNode);
@@ -77,23 +77,23 @@ export function patch(newVNode, oldVNode, domNode, env = DEFAULT_ENV) {
     }
     var delayedProps = setAttributes(
       domNode,
-      newVNode.attributes,
-      oldVNode.attributes,
+      newVNode.props,
+      oldVNode.props,
       env.isSVG
     );
 
     patchChildren(domNode, newVNode.children, oldVNode.children, env);
     if (delayedProps != null) {
-      setProps(domNode, newVNode.attributes, oldVNode.attributes, delayedProps);
+      setProps(domNode, newVNode.props, oldVNode.props, delayedProps);
     }
     return domNode;
   } else if (
     isVComponent(newVNode) &&
     isVComponent(oldVNode) &&
-    newVNode.component === oldVNode.component
+    newVNode.type === oldVNode.type
   ) {
     newVNode._state = oldVNode._state;
-    return newVNode.component.patch(
+    return newVNode.type.patch(
       newVNode.props,
       oldVNode.props,
       newVNode._state,
@@ -106,16 +106,15 @@ export function patch(newVNode, oldVNode, domNode, env = DEFAULT_ENV) {
 }
 
 export function unmount(vnode, domNode, env) {
-  if (vnode == null || isVLeaf(vnode)) {
+  if (isVNull(vnode) || isVLeaf(vnode)) {
     return;
   }
   if (isVElement(vnode)) {
-    var childNodes = Array.from(domNode.childNodes);
     for (var i = 0; i < vnode.children.length; i++) {
-      unmount(vnode.children[i], childNodes[i], env);
+      unmount(vnode.children[i], domNode.childNodes[i], env);
     }
   } else if (isVComponent(vnode)) {
-    vnode.component.unmount(vnode._state, domNode, env);
+    vnode.type.unmount(vnode._state, domNode, env);
   }
 }
 
