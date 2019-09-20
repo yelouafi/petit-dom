@@ -94,32 +94,11 @@ ordinary functions. Any instance specific data must be stored in the `stateRef` 
 nested `mount`, `patch` and `unmount` calls (see below example)**.
 
 Custom components are pretty raw, but they are also flexible and allow
-implementing higher-level solution. For example, render functions are implemented
-on top of them.
+implementing higher-level solution (for example, render functions are implemented
+on top of them).
 
-```js
-function createRenderComponent({ render, shouldUpdate = shallowCompare }) {
-  return {
-    mount(props, stateRef, env) {
-      var vnode = render(props);
-      stateRef.vnode = vnode;
-      return mount(vnode, env);
-    },
-    patch(newProps, oldProps, stateRef, domNode, env) {
-      if (!shouldUpdate(newProps, oldProps)) {
-        return domNode;
-      }
-      var newVNode = render(newProps);
-      var oldVNode = stateRef.vnode;
-      stateRef.vnode = newVNode;
-      return patch(newVNode, oldVNode, domNode, env);
-    },
-    unmount(stateRef, domNode, env) {
-      unmount(stateRef.vnode, domNode, env);
-    }
-  };
-}
-```
+The examples folder contains simple (and partial) implementations of React like
+components and hooks using the custom component API.
 
 ## API
 
