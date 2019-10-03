@@ -40,8 +40,13 @@ test("patch node with different types", assert => {
   const vnode = "old text";
   const node = mount(vnode);
 
+  // see issue #31: Null doesn't remove previous node
+  const nullNode = patch(null, vnode, node);
+  assert.notEqual(node, nullNode);
+  assert.equal(nullNode.nodeType, 8 /* comment node type*/);
+
   const vnode2 = h("span");
-  const node2 = patch(vnode2, vnode, node);
+  const node2 = patch(vnode2, null, nullNode);
 
   assert.notEqual(node, node2);
   assert.equal(node2.tagName, "SPAN");

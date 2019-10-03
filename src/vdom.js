@@ -62,7 +62,7 @@ export function mount(vnode, env = DEFAULT_ENV) {
 export function patch(newVNode, oldVNode, domNode, env = DEFAULT_ENV) {
   if (oldVNode === newVNode) {
     return domNode;
-  } else if (isVNull(newVNode) && isVNull(newVNode)) {
+  } else if (isVNull(newVNode) && isVNull(oldVNode)) {
     return domNode;
   } else if (isVLeaf(newVNode) && isVLeaf(oldVNode)) {
     domNode.nodeValue = String(newVNode);
