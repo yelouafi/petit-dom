@@ -12,7 +12,7 @@ export function render(vnode, parentDomNode) {
     domNode = patch(vnode, state.vnode, state.domNode);
     if (domNode !== state.domNode) {
       parentDomNode.replaceChild(domNode, state.domNode);
-      unmount(state.vnode);
+      unmount(state.vnode, state.domNode);
     }
   }
   parentDomNode.$$petitDomState$$ = { vnode, domNode };
