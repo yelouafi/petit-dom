@@ -223,7 +223,7 @@ export function unmount(vnode, ref, env) {
       unmount(childVNode, ref.children[index], env)
     );
   } else if (isComponent(vnode)) {
-    vnode.type.unmount(vnode.props, ref, env);
+    vnode.type.unmount(vnode.props, ref.childRef, ref.childState, env);
   }
 }
 

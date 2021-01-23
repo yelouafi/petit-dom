@@ -369,7 +369,7 @@ test("patch render functions", (assert) => {
 
   function Box(props) {
     //renderCalls++;
-    return h("h1", { title: props.title }, props.children);
+    return h("h1", { title: props.title }, props.content);
   }
 
   render(h(Box, { title: "box title" }, "box content"), root);

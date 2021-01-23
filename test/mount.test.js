@@ -105,7 +105,7 @@ test("element with nested array", (assert) => {
 
 test("render functions", (assert) => {
   function Box(props) {
-    return h("h1", { title: props.title }, props.children);
+    return h("h1", { title: props.title }, props.content);
   }
 
   const vnode = h(Box, { title: "box title" }, "box content");

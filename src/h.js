@@ -40,12 +40,12 @@ export function h(type, props, ...children) {
     return {
       vtype: VTYPE_FUNCTION,
       type,
-      props: Object.assign({}, props, { children }),
+      props: Object.assign({}, props, { content }),
     };
   }
   throw new Error("h: Invalid type!");
 }
 
 export function Fragment(props) {
-  return props.children;
+  return props.content;
 }
