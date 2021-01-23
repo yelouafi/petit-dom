@@ -1,19 +1,39 @@
 export { h } from "./h.js";
-export { mount, patch, unmount } from "./vdom.js";
-import { mount, patch, unmount } from "./vdom.js";
+export { mount, patch, patchInPlace, unmount } from "./vdom.js";
+export { getDomNode, getParentNode, getNextSibling } from "./dom.js";
+import { insertDom } from "./dom.js";
+import { mount, patchInPlace, DEFAULT_ENV } from "./vdom.js";
 
-export function render(vnode, parentDomNode) {
-  var state = parentDomNode.$$petitDomState$$;
-  var domNode;
-  if (state == null) {
-    domNode = mount(vnode);
-    parentDomNode.appendChild(domNode);
-  } else {
-    domNode = patch(vnode, state.vnode, state.domNode);
-    if (domNode !== state.domNode) {
-      parentDomNode.replaceChild(domNode, state.domNode);
-      unmount(state.vnode, state.domNode);
-    }
+let effects = [];
+
+export function scheduleEffect(eff) {
+  effects.push(eff);
+}
+
+function runEffects() {
+  while (effects.length > 0) {
+    let currentEffects = effects;
+    effects = [];
+    currentEffects.forEach((eff) => eff());
   }
-  parentDomNode.$$petitDomState$$ = { vnode, domNode };
+}
+
+export function render(vnode, parentDomNode, env = DEFAULT_ENV) {
+  let rootRef = parentDomNode.$$PETIT_DOM_REF;
+  if (rootRef == null) {
+    const ref = mount(vnode, env);
+    parentDomNode.$$PETIT_DOM_REF = { ref, vnode };
+    parentDomNode.textContent = "";
+    insertDom(parentDomNode, ref, null);
+  } else {
+    rootRef.ref = patchInPlace(
+      parentDomNode,
+      vnode,
+      rootRef.vnode,
+      rootRef.ref,
+      env
+    );
+    rootRef.vnode = vnode;
+  }
+  runEffects();
 }

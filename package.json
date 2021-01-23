@@ -28,7 +28,7 @@
   },
   "scripts": {
     "lint": "eslint src test",
-    "test": "node -r esm test/index.js | faucet",
+    "test": "node test/index.js | faucet",
     "check": "npm run lint && npm run test",
     "release:patch": "npm version patch && git push --follow-tags && npm publish",
     "release:minor": "npm version minor && git push --follow-tags && npm publish",

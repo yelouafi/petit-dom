@@ -1,44 +1,51 @@
-import { maybeFlattenArray } from "./utils.js";
-import { createFunctionComponent } from "./createRenderComponent.js";
+export const EMPTY_OBJECT = {};
 
-const EMPTY_OBJECT = {};
-const VTYPE_ELEMENT = 0x80;
-const VTYPE_COMPONENT = 0x100;
+const VTYPE_ELEMENT = 1;
+const VTYPE_FUNCTION = 2;
+const VTYPE_COMPONENT = 4;
 
-export const isVNull = c => c === null;
-export const isVLeaf = c => typeof c === "string" || typeof c === "number";
-export const isVElement = c => c != null && c.vtype === VTYPE_ELEMENT;
-export const isVComponent = c => c != null && c.vtype === VTYPE_COMPONENT;
+export const isEmpty = (c) =>
+  c === null || (Array.isArray(c) && c.length === 0);
+export const isNonEmptyArray = (c) => Array.isArray(c) && c.length > 0;
+export const isLeaf = (c) => typeof c === "string" || typeof c === "number";
+export const isElement = (c) => c?.vtype === VTYPE_ELEMENT;
+export const isRenderFunction = (c) => c?.vtype === VTYPE_FUNCTION;
+export const isComponent = (c) => c?.vtype === VTYPE_COMPONENT;
 
-const isValidComponentType = c =>
-  c != null && c.mount != null && c.patch != null && c.unmount != null;
+const isValidComponentType = (c) => typeof c?.mount === "function";
 
-export function h(type, props = EMPTY_OBJECT, ...children) {
-  const key = props != null ? props.key : null;
+export function h(type, props, ...children) {
+  props = props ?? EMPTY_OBJECT;
+  const content =
+    children.length < 1
+      ? undefined
+      : children.length < 2
+      ? children[0]
+      : children;
+
   if (typeof type === "string") {
     return {
       vtype: VTYPE_ELEMENT,
       type,
-      key,
       props,
-      children: maybeFlattenArray(children)
+      content,
     };
   } else if (isValidComponentType(type)) {
     return {
       vtype: VTYPE_COMPONENT,
       type,
-      key,
-      props: Object.assign({}, props, { children }),
-      _state: null
+      props: Object.assign({}, props, { content }),
     };
   } else if (typeof type === "function") {
     return {
-      vtype: VTYPE_COMPONENT,
-      type: createFunctionComponent(type),
-      key,
+      vtype: VTYPE_FUNCTION,
+      type,
       props: Object.assign({}, props, { children }),
-      _state: null
     };
   }
   throw new Error("h: Invalid type!");
+}
+
+export function Fragment(props) {
+  return props.children;
 }
