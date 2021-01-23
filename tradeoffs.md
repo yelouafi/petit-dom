@@ -1,7 +1,0 @@
-## Trade offs
-
-- 👎 No separation between diffing and patching, you probably don't want that unless you're planning to build your own shceduling for DOM updates (currently all DOM updates are performed synchronously. At the time of this writing, probably React is the only lib that implements DOM updating over mulitple frames).
-- 👎 No Server Side Rendering (SSR) support, you can of course serve plain HTML from the server but currently the library doesn't support hydrating an existing DOM tree, you'll need to replace the whole tree with a new one (should be a fast operation in modern browsers but you'll have to measure for yourself).
-- 👍 [Reasonably fast diffing algorithm](https://rawgit.com/krausest/js-framework-benchmark/master/webdriver-ts-results/table.html). **Note this [shouldn't  mean your app will be auto-magically faster](https://github.com/facebook/react/issues/10703)**.
-- 👍 Very accurate diffing algorithm. The library will infer the minimum number of operations (insertion, move, deletion) to update DOM elements.
-- 👍 Non opinionated virtual DOM library. The library comes with a minimal/low-level definition of the concept of Component. If you're looking to build your own abstraction on top of the library, this is your thing.

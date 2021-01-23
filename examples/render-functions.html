@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      body {
+        background-color: #eee;
+      }
+      .box {
+        background: #fff;
+        box-shadow: 0 10px 6px -6px #777;
+        max-width: 600px;
+        margin: 2em auto;
+        padding: 1em;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module">
+      import { h, render } from "../../src/index.js";
+
+      function Box({ title, content }) {
+        return h(
+          "div",
+          { class: "box" },
+          h("h1", null, title),
+          h("p", null, content)
+        );
+      }
+
+      const root = document.getElementById("root");
+      render(
+        h(
+          "div",
+          null,
+          h(Box, { title: "Fancy Box 1" }, "Box content 1"),
+          h(Box, { title: "Fancy Box 2" }, "Box content 2")
+        ),
+        root
+      );
+    </script>
+  </body>
+</html>

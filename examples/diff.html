@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      .box {
+        border: 1px solid gray;
+        margin: 2px;
+        padding: 5px;
+      }
+
+      .mounted {
+        background-color: #c6ec9a;
+      }
+
+      .patched {
+        background-color: #ffffff;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module">
+      import { h, render, mount, patch } from "../../src/index.js";
+
+      const DiffHighlighter = {
+        mount(props, state, env) {
+          state.vnode = h("span", { class: "box mounted" }, props.content);
+          return mount(state.vnode, env);
+        },
+        patch(parentDom, newProps, oldProps, ref, state, env) {
+          const oldVNode = state.vnode;
+          state.vnode = h("span", { class: "box patched" }, newProps.content);
+          return patch(parentDom, state.vnode, oldVNode, ref, env);
+        },
+        unmount() {},
+      };
+
+      function App({ input, list, prevList }) {
+        return h(
+          "div",
+          null,
+          h("input", {
+            value: input,
+            placeholder: "Enter some sequence",
+            oninput: (e) =>
+              render(App({ list, prevList, input: e.target.value }), root),
+            onkeydown: (e) => {
+              if (e.which === 13)
+                render(
+                  App({
+                    list: input,
+                    prevList: list,
+                    input,
+                  }),
+                  root
+                );
+            },
+          }),
+          h(
+            "span",
+            null,
+            " ",
+            prevList == list
+              ? ""
+              : `${prevList || "(empty)"} ⇨ ${list || "(empty)"}`
+          ),
+          h("hr"),
+          h("h3", null, "Diff"),
+          list.split("").map((it) => h(DiffHighlighter, { key: it }, it)),
+          h("h3", null, "State"),
+          h("pre", null, JSON.stringify({ input, list, prevList }, null, 2))
+        );
+      }
+
+      const root = document.getElementById("root");
+      render(App({ input: "", list: "", prevList: "" }), root);
+    </script>
+  </body>
+</html>
