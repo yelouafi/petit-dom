@@ -4,11 +4,27 @@ export const REF_PARENT = 8; // ref with a child ref
 
 export const SVG_NS = "http://www.w3.org/2000/svg";
 
-const DELAYED_PROPS = {
-  selected: true,
-  value: true,
-  checked: true,
-  innerHTML: true,
+function propDirective(prop) {
+  return {
+    mount(element, value) {
+      element[prop] = value;
+    },
+    patch(element, newValue, oldValue) {
+      if (newValue !== oldValue) {
+        element[prop] = newValue;
+      }
+    },
+    unmount(element, _) {
+      element[prop] = null;
+    },
+  };
+}
+
+export const DOM_PROPS_DIRECTIVES = {
+  selected: propDirective("selected"),
+  checked: propDirective("checked"),
+  value: propDirective("value"),
+  innerHTML: propDirective("innerHTML"),
 };
 /**
   TODO: activate full namespaced attributes (not supported in JSX)
@@ -87,49 +103,68 @@ export function replaceDom(parent, newRef, oldRef) {
   removeDom(parent, oldRef);
 }
 
-export function setDOMProps(el, newProps, oldProps, keys) {
-  for (var i = 0; i < keys.length; i++) {
-    var key = keys[i];
-    var oldv = oldProps[key];
-    var newv = newProps[key];
-    if (oldv !== newv) {
-      el[key] = newv;
+export function mountDirectives(domElement, props, env) {
+  for (let key in props) {
+    if (key in env.directives) {
+      env.directives[key].mount(domElement, props[key]);
     }
   }
 }
 
-export function patchProps(domElement, newProps, oldProps, isSVG) {
-  var delayedProps;
-  for (var key in newProps) {
-    if (key === "key") continue;
+export function patchDirectives(domElement, newProps, oldProps, env) {
+  for (let key in newProps) {
+    if (key in env.directives) {
+      env.directives[key].patch(domElement, newProps[key], oldProps[key]);
+    }
+  }
+  for (let key in oldProps) {
+    if (key in env.directives && !(key in newProps)) {
+      env.directives[key].unmount(domElement, oldProps[key]);
+    }
+  }
+}
+
+export function unmountDirectives(domElement, props, env) {
+  for (let key in props) {
+    if (key in env.directives) {
+      env.directives[key].unmount(domElement, props[key]);
+    }
+  }
+}
+
+export function mountAttributes(domElement, props, env) {
+  for (var key in props) {
+    if (key === "key" || key in env.directives) continue;
     if (key.startsWith("on")) {
-      domElement[key] = newProps[key];
-      continue;
+      domElement[key.toLowerCase()] = props[key];
+    } else {
+      setDOMAttribute(domElement, key, props[key], env.isSVG);
     }
-    if (DELAYED_PROPS[key] != null) {
-      if (delayedProps == null) delayedProps = [];
-      delayedProps.push(key);
-      continue;
-    }
+  }
+}
+
+export function patchAttributes(domElement, newProps, oldProps, env) {
+  for (var key in newProps) {
+    if (key === "key" || key in env.directives) continue;
+
     var oldValue = oldProps[key];
     var newValue = newProps[key];
     if (oldValue !== newValue) {
-      setDOMAttribute(domElement, key, newValue, isSVG);
-    }
-  }
-  for (key in oldProps) {
-    if (key === "key") continue;
-    if (!(key in newProps)) {
-      if (key.startsWith("on") || DELAYED_PROPS[key] != null) {
-        // This is an edge case; assuming setting value to null
-        // would reset the DOM property to its default state (??)
-        domElement[key] = null;
+      if (key.startsWith("on")) {
+        domElement[key.toLowerCase()] = newValue;
       } else {
-        domElement.removeAttribute(key);
+        setDOMAttribute(domElement, key, newValue, env.isSVG);
       }
     }
   }
-  return delayedProps;
+  for (key in oldProps) {
+    if (key === "key" || key in env.directives || key in newProps) continue;
+    if (key.startsWith("on")) {
+      domElement[key.toLowerCase()] = null;
+    } else {
+      domElement.removeAttribute(key);
+    }
+  }
 }
 
 function setDOMAttribute(el, attr, value, isSVG) {

@@ -16,6 +16,8 @@ const isValidComponentType = (c) => typeof c?.mount === "function";
 
 export function h(type, props, ...children) {
   props = props ?? EMPTY_OBJECT;
+  // better fail early
+  if (props.key !== props.key) throw new Error("Invalid NaN key");
   const content =
     children.length < 1
       ? undefined

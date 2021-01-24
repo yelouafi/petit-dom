@@ -1,25 +1,14 @@
-export { h } from "./h.js";
+export { h, Fragment } from "./h.js";
 export { mount, patch, patchInPlace, unmount } from "./vdom.js";
-export { getDomNode, getParentNode, getNextSibling } from "./dom.js";
+export { scheduleEffect } from "./scheduler.js";
 import { insertDom } from "./dom.js";
+import { runEffects } from "./scheduler.js";
 import { mount, patchInPlace, DEFAULT_ENV } from "./vdom.js";
 
-let effects = [];
-
-export function scheduleEffect(eff) {
-  effects.push(eff);
-}
-
-function runEffects() {
-  while (effects.length > 0) {
-    let currentEffects = effects;
-    effects = [];
-    currentEffects.forEach((eff) => eff());
-  }
-}
-
-export function render(vnode, parentDomNode, env = DEFAULT_ENV) {
+export function render(vnode, parentDomNode, options = {}) {
   let rootRef = parentDomNode.$$PETIT_DOM_REF;
+  let env = Object.assign({}, DEFAULT_ENV);
+  Object.assign(env.directives, options.directives);
   if (rootRef == null) {
     const ref = mount(vnode, env);
     parentDomNode.$$PETIT_DOM_REF = { ref, vnode };

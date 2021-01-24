@@ -21,7 +21,6 @@
   "dependencies": {},
   "devDependencies": {
     "eslint": "^6.4.0",
-    "esm": "^3.2.25",
     "faucet": "^0.0.1",
     "jsdom": "^15.1.1",
     "tape": "^4.11.0"

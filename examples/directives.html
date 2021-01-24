@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+  <body>
+    <div id="root"></div>
+    <script type="module">
+      import { h, render, Fragment } from "../../src/index.js";
+
+      const log = {
+        mount(node, value) {
+          console.log("myDir.mount", node, value);
+        },
+        patch(node, newValue, oldValue) {
+          console.log("myDir.patch", node, newValue, oldValue);
+        },
+        unmount(node, value) {
+          console.log("myDir.unmount", node, value);
+        },
+      };
+
+      function App(count, key) {
+        return h(
+          "div",
+          null,
+          h(
+            Fragment,
+            { key },
+            h("span", { log: `count ${count}` }, "count ", count),
+            h(
+              "button",
+              {
+                onclick() {
+                  render(App(count + 1, key), root, options);
+                },
+              },
+              "Increment"
+            )
+          ),
+          h(
+            "button",
+            {
+              onclick() {
+                render(App(0, key + 1), root, options);
+              },
+            },
+            "Hard Reset"
+          )
+        );
+      }
+
+      let options = { directives: { log } };
+      const root = document.getElementById("root");
+      render(App(0, 1), root, options);
+    </script>
+  </body>
+</html>

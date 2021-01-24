@@ -1,5 +1,6 @@
 import test from "tape";
-import { h, mount, getDomNode } from "../src/index.js";
+import { h, mount } from "../src/index.js";
+import { getDomNode } from "../src/dom.js";
 
 test("text node", (assert) => {
   const vnode = "raw text";
