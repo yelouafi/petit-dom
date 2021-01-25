@@ -1,5 +1,6 @@
 import test from "tape";
-import { h, mount, patch } from "../src";
+import { Fragment } from "../src/h.js";
+import { h, render } from "../src/index.js";
 
 //  Fisher-Yates Shuffle
 // code from https://stackoverflow.com/a/6274398/1430627
@@ -23,57 +24,72 @@ function shuffle(array) {
   return array;
 }
 
-test("text node", assert => {
-  const vnode = "old text";
-  const node = mount(vnode);
+test("text node", (assert) => {
+  const root = document.createElement("div");
 
-  const vnode2 = "new text";
-  const node2 = patch(vnode2, vnode, node);
+  render("old text", root);
+  const node1 = root.firstChild;
 
-  assert.equal(node, node2);
-  assert.equal(node.nodeValue, "new text");
+  render("new text", root);
+  const node2 = root.firstChild;
+
+  assert.equal(node1, node2);
+  assert.equal(node2.nodeValue, "new text");
 
   assert.end();
 });
 
-test("patch node with different types", assert => {
-  const vnode = "old text";
-  const node = mount(vnode);
+test("patch node with different types", (assert) => {
+  const root = document.createElement("div");
+
+  const vnode1 = "old text";
+  render(vnode1, root);
+  const node1 = root.firstChild;
 
   // see issue #31: Null doesn't remove previous node
-  const nullNode = patch(null, vnode, node);
-  assert.notEqual(node, nullNode);
-  assert.equal(nullNode.nodeType, 8 /* comment node type*/);
+  render(null, root);
+  const node2 = root.firstChild;
 
-  const vnode2 = h("span");
-  const node2 = patch(vnode2, null, nullNode);
+  assert.notEqual(node1, node2);
+  assert.equal(node2.nodeType, 8 /* comment node type*/);
 
-  assert.notEqual(node, node2);
-  assert.equal(node2.tagName, "SPAN");
-
-  const vnode3 = h("div");
-  const node3 = patch(vnode3, vnode2, node2);
+  render(h("span"), root);
+  const node3 = root.firstChild;
 
   assert.notEqual(node2, node3);
-  assert.equal(node3.tagName, "DIV");
+  assert.equal(node3.tagName, "SPAN");
+
+  render(h("div"), root);
+  const node4 = root.firstChild;
+
+  assert.notEqual(node3, node4);
+  assert.equal(node4.tagName, "DIV");
 
   assert.end();
 });
 
-test("patch props", assert => {
-  const vnode = h("input", {
-    type: "text",
-    value: "old value",
-    style: "color: red"
-  });
-  const node = mount(vnode);
+test("patch props", (assert) => {
+  const root = document.createElement("div");
 
-  const vnode2 = h("input", {
-    type: "text",
-    value: "new value",
-    style: "color: green; border: 1px solid black"
-  });
-  const node2 = patch(vnode2, vnode, node);
+  render(
+    h("input", {
+      type: "text",
+      value: "old value",
+      style: "color: red",
+    }),
+    root
+  );
+  const node = root.firstChild;
+
+  render(
+    h("input", {
+      type: "text",
+      value: "new value",
+      style: "color: green; border: 1px solid black",
+    }),
+    root
+  );
+  const node2 = root.firstChild;
 
   assert.equal(node2, node);
   assert.equal(node.type, "text");
@@ -84,34 +100,42 @@ test("patch props", assert => {
   assert.end();
 });
 
-test("patch attributes (svg)", assert => {
-  const vnode = h(
-    "div",
-    null,
-    h("span", null, "..."),
-    h("svg", null, h("circle", { cx: 50, cy: 60, r: 30 })),
-    h("span", null, "...")
+test("patch attributes (svg)", (assert) => {
+  const root = document.createElement("div");
+
+  render(
+    h(
+      "div",
+      null,
+      h("span", null, "..."),
+      h("svg", null, h("circle", { cx: 50, cy: 60, r: 30 })),
+      h("span", null, "...")
+    ),
+    root
   );
-  const node = mount(vnode);
+  const node = root.firstChild;
+
   let svgCircle = node.childNodes[1].firstChild;
   assert.equal(svgCircle.getAttribute("cx"), "50");
   assert.equal(svgCircle.getAttribute("cy"), "60");
   assert.equal(svgCircle.getAttribute("r"), "30");
 
   const onclick = () => {};
-  const vnode2 = h(
-    "div",
-    null,
-    h("span", null, "..."),
+  render(
     h(
-      "svg",
+      "div",
       null,
-      h("circle", { cx: 50, cy: 40, stroke: "green", fill: "yellow" })
+      h("span", null, "..."),
+      h(
+        "svg",
+        null,
+        h("circle", { cx: 50, cy: 40, stroke: "green", fill: "yellow" })
+      ),
+      h("span", { onclick }, "...")
     ),
-    h("span", { onclick }, "...")
+    root
   );
 
-  patch(vnode2, vnode, node);
   assert.equal(svgCircle.getAttribute("cx"), "50");
   assert.equal(svgCircle.getAttribute("cy"), "40");
   assert.equal(svgCircle.getAttribute("stroke"), "green");
@@ -128,18 +152,17 @@ test("patch attributes (svg)", assert => {
   assert.end();
 });
 
-test("patch non keyed children", assert => {
-  const render = s => h("div", null, s.split(""));
+test("patch non keyed children", (assert) => {
+  const root = document.createElement("div");
+  const view = (s) => h("div", null, s.split(""));
 
-  let vnode, vnode2, node;
-  vnode = h("div");
-  node = mount(vnode);
+  let node;
+  render(h("div", null, "1"), root);
+  node = root.firstChild;
 
   function testPatch(seq, message) {
-    assert.test(message, assert => {
-      vnode2 = render(seq);
-      patch(vnode2, vnode, node);
-      vnode = vnode2;
+    assert.test(message, (assert) => {
+      render(view(seq), root);
       assert.plan(seq.length * 2 + 1);
 
       assert.equal(
@@ -171,47 +194,49 @@ test("patch non keyed children", assert => {
   testPatch("2x3y67z8", "multiple modificationq");
   testPatch(shuffle("2x3y67z8".split("")).join(""), "shuffle");
   testPatch("ABCDEF", "replace all");
-  testPatch("", "clear");
+
+  render(view(""), root);
+  assert.equal(node.childNodes.length, 1, "should contain one empty node");
+  assert.equal(node.firstChild.nodeType, 8, "empty child should be a comment");
 
   assert.end();
 });
 
-test("patch keyed children", assert => {
-  const render = str =>
-    h("div", null, str.split("").map(c => h("span", { key: c }, c)));
+test("patch keyed children", (assert) => {
+  const root = document.createElement("div");
+  const view = (str) =>
+    h(
+      "div",
+      null,
+      str.split("").map((c) => h("span", { key: c }, c))
+    );
 
-  let prevVNode,
-    prevChildNodes,
-    vnode = render(""),
-    node = mount(vnode),
-    childNodes = Array.from(node.childNodes);
+  render(h("div"), root);
+
+  let node = root.firstChild,
+    prevChildNodes = Array.from(node.childNodes),
+    prevSeq = "";
 
   function testPatch(seq, message) {
-    assert.test(message, assert => {
-      prevVNode = vnode;
-      prevChildNodes = childNodes;
-      vnode = render(seq);
-
-      const findOldByKey = key => seq.indexOf(c => c === key);
-
-      patch(vnode, prevVNode, node);
-      childNodes = node.childNodes;
+    assert.test(message, (assert) => {
+      render(view(seq), root);
+      let childNodes = Array.from(node.childNodes);
 
       assert.plan(seq.length * 2 + 1);
-      assert.equal(node.childNodes.length, seq.length);
+      assert.equal(childNodes.length, seq.length);
 
       for (var i = 0; i < seq.length; i++) {
         const text = seq[i];
 
-        const index = findOldByKey(text);
+        const index = prevSeq.indexOf(text);
         if (index >= 0) {
           assert.equal(
             prevChildNodes[index],
             childNodes[i],
-            "should preserve DOM node"
+            "should preserve DOM node for " + text
           );
         } else {
-          assert.ok(true, "new node");
+          assert.ok(true, "new node " + text);
         }
         assert.equal(
           childNodes[i].firstChild.nodeValue,
@@ -219,6 +244,8 @@ test("patch keyed children", assert => {
           "should patch text content"
         );
       }
+      prevSeq = seq;
+      prevChildNodes = childNodes;
       //assert.end();
     });
   }
@@ -235,24 +262,121 @@ test("patch keyed children", assert => {
   testPatch("2x6y37z8", "multiple modifications");
   testPatch(shuffle("2x6y37z8".split("")).join(""), "shuffle");
   testPatch("ABCDEF", "replace all");
-  testPatch("", "clear");
+
+  render(view(""), root);
+  assert.equal(node.childNodes.length, 1, "should contain one empty node");
+  assert.equal(node.firstChild.nodeType, 8, "empty child should be a comment");
 
   assert.end();
 });
 
-test("patch render functions", assert => {
-  //let renderCalls = 0;
+test("patch fragemnts", (assert) => {
+  const root = document.createElement("div");
+
+  const seq = (str, num) => {
+    return h(
+      Fragment,
+      { key: num },
+      str.split("").map((s) => h("span", { key: s, class: `seq-${num}` }, s))
+    );
+  };
+
+  const view = (str) => {
+    return h("div", null, "first text", seq(str), seq(str), "last text");
+  };
+
+  const getChildNodes = (seq) => {
+    const childNodes = Array.from(root.firstChild.childNodes);
+    return [
+      childNodes.slice(1, seq.length + 1),
+      childNodes.slice(seq.length + 1, 2 * seq.length + 1),
+    ];
+  };
+
+  render(h("div"), root);
+
+  let prevChildNodes = getChildNodes("");
+  let prevSeq = "";
+
+  function matchSeq(seq, prevSeq, childNodes, prevChildNodes, message) {
+    assert.test(message, (assert) => {
+      assert.plan(seq.length * 2 + 1);
+
+      assert.equal(childNodes.length, seq.length);
+
+      for (var i = 0; i < seq.length; i++) {
+        const text = seq[i];
+
+        const index = prevSeq.indexOf(text);
+        if (index >= 0) {
+          assert.equal(
+            prevChildNodes[index],
+            childNodes[i],
+            "should preserve DOM node for " + text
+          );
+        } else {
+          assert.ok(true, "new node");
+        }
+        assert.equal(
+          childNodes[i].firstChild.nodeValue,
+          text,
+          "should patch text content for " + text
+        );
+      }
+    });
+  }
+
+  function testPatch(seq, message) {
+    render(view(seq), root);
+    let childNodes = getChildNodes(seq);
+    matchSeq(
+      seq,
+      prevSeq,
+      childNodes[0],
+      prevChildNodes[0],
+      `${message} - seq-1`
+    );
+    matchSeq(
+      seq,
+      prevSeq,
+      childNodes[1],
+      prevChildNodes[1],
+      `${message} - seq-2`
+    );
+    prevChildNodes = childNodes;
+    prevSeq = seq;
+  }
+
+  testPatch("36", "append to an empty sequence");
+  testPatch("3678", "append");
+  testPatch("7836", "reorder");
+  testPatch("3678", "reorde(2)");
+  testPatch("123678", "prepend");
+  testPatch("12345678", "insert in the middle");
+  testPatch("A0123456789B", "append + prepend");
+  testPatch("12345678", "remove from edges");
+  testPatch("123678", "remove from middle");
+  testPatch("2x6y37z8", "multiple modifications");
+  testPatch(shuffle("2x6y37z8".split("")).join(""), "shuffle");
+  testPatch("ABCDEF", "replace all");
+
+  assert.end();
+});
+
+test("patch render functions", (assert) => {
+  // let renderCalls = 0;
+  const root = document.createElement("div");
 
   function Box(props) {
     //renderCalls++;
     return h("h1", { title: props.title }, props.children);
   }
 
-  const vnode = h(Box, { title: "box title" }, "box content");
-  const node = mount(vnode); // renderCalls = 1
+  render(h(Box, { title: "box title" }, "box content"), root);
+  const node = root.firstChild; // renderCalls = 1
 
-  const vnode2 = h(Box, { title: "another box title" }, "another box content");
-  patch(vnode2, vnode, node); // renderCalls = 2
+  render(h(Box, { title: "another box title" }, "another box content"), root);
+  // renderCalls = 2
   assert.equal(node.title, "another box title");
   assert.equal(node.firstChild.nodeValue, "another box content");
   /*
@@ -283,7 +407,7 @@ test("Patch Component", assert => {
       patchCalls++;
       node._payload = [props, content];
       assert.deepEqual(oldProps, vnode.props);
-      assert.deepEqual(oldContent, vnode.content);
+      assert.deepEqual(oldContent, vnode.children);
       return node;
     },
     unmount: () => {}
@@ -297,7 +421,7 @@ test("Patch Component", assert => {
 
   const node = mount(vnode);
   assert.equal(vnode._node, node);
-  assert.deepEqual(node._payload, [vnode.props, vnode.content]);
+  assert.deepEqual(node._payload, [vnode.props, vnode.children]);
 
   const vnode2 = h(
     MyComponent,
@@ -307,107 +431,136 @@ test("Patch Component", assert => {
   patch(vnode2, vnode);
   assert.equal(vnode2._node, node);
   assert.equal(patchCalls, 1, "patch should invoke Component.patch");
-  assert.deepEqual(node._payload, [vnode2.props, vnode2.content]);
+  assert.deepEqual(node._payload, [vnode2.props, vnode2.children]);
 
   assert.end();
 });
 */
 
-test("issues #24: applyDiff fails to insert when oldChildren is modified", assert => {
-  const oldVnode = h("div", {}, [
-    h("p", null, "p"),
-    h("div", { key: "x" }, "div"),
-    h("pre", null, "pre"),
-    h("code", null, "code")
-  ]);
+test("issues #24: applyDiff fails to insert when oldChildren is modified", (assert) => {
+  const root = document.createElement("div");
 
-  const newVnode = h("div", {}, [
-    h("pre", null, "pre"),
-    h("code", null, "code"),
-    h("div", { key: "x" }, "div"),
-    h("p", null, "p")
-  ]);
-
-  const node = mount(oldVnode);
-  patch(newVnode, oldVnode, node);
-  assert.pass("Doesn't blow up");
-  assert.end();
-});
-
-test("issues #25: applyDiff fails with empty strings", assert => {
-  const oldVnode = h("div", {}, [
-    h("p", null, "p"),
-    "",
-    h("pre", null, "pre"),
-    h("code", null, "code")
-  ]);
-
-  const newVnode = h("div", {}, [
-    h("pre", null, "pre"),
-    h("code", null, "code"),
-    "",
-    h("p", null, "p")
-  ]);
-
-  const node = mount(oldVnode);
-  patch(newVnode, oldVnode, node);
-  assert.pass("Doesn't blow up");
-  assert.end();
-});
-
-test("issues #26: applyDiff fails with blank strings", assert => {
-  const oldVnode = h("div", {}, [
-    h("p", null, "p"),
-    " ",
-    h("pre", null, "pre"),
-    h("code", null, "code")
-  ]);
-
-  const newVnode = h("div", {}, [
-    h("pre", null, "pre"),
-    h("code", null, "code"),
-    " ",
-    h("p", null, "p")
-  ]);
-
-  const node = mount(oldVnode);
-  patch(newVnode, oldVnode, node);
-  assert.pass("Doesn't blow up");
-  assert.end();
-});
-
-test("issues #27: New DOM-tree is not synced with vdom-tree", assert => {
-  var oldVnode = h("div", {}, [
-    h("p", {}, [
-      "Text",
-      h("code", {}, ["Text"]),
-      "Text",
-      h("code", {}, ["Text"]),
-      "Text"
+  render(
+    h("div", {}, [
+      h("p", null, "p"),
+      h("div", { key: "x" }, "div"),
+      h("pre", null, "pre"),
+      h("code", null, "code"),
     ]),
-    h("div", {}, [])
-  ]);
+    root
+  );
+  //const node = root.firstChild
 
-  var newVnode = h("div", {}, [
+  render(
+    h("div", {}, [
+      h("pre", null, "pre"),
+      h("code", null, "code"),
+      h("div", { key: "x" }, "div"),
+      h("p", null, "p"),
+    ]),
+    root
+  );
+
+  assert.pass("Doesn't blow up");
+  assert.end();
+});
+
+test("issues #25: applyDiff fails with empty strings", (assert) => {
+  const root = document.createElement("div");
+  render(
+    h("div", {}, [
+      h("p", null, "p"),
+      "",
+      h("pre", null, "pre"),
+      h("code", null, "code"),
+    ]),
+    root
+  );
+  //const node = root.firstChild
+
+  render(
+    h("div", {}, [
+      h("pre", null, "pre"),
+      h("code", null, "code"),
+      "",
+      h("p", null, "p"),
+    ]),
+    root
+  );
+
+  assert.pass("Doesn't blow up");
+  assert.end();
+});
+
+test("issues #26: applyDiff fails with blank strings", (assert) => {
+  const root = document.createElement("root");
+  render(
+    h("div", {}, [
+      h("p", null, "p"),
+      " ",
+      h("pre", null, "pre"),
+      h("code", null, "code"),
+    ]),
+    root
+  );
+
+  render(
+    h("div", {}, [
+      h("pre", null, "pre"),
+      h("code", null, "code"),
+      " ",
+      h("p", null, "p"),
+    ]),
+    root
+  );
+
+  assert.pass("Doesn't blow up");
+  assert.end();
+});
+
+test("issues #27: New DOM-tree is not synced with vdom-tree", (assert) => {
+  const root = document.createElement("div");
+  render(
+    h("div", {}, [
+      h("p", {}, [
+        "Text",
+        h("code", {}, ["Text"]),
+        "Text",
+        h("code", {}, ["Text"]),
+        "Text",
+      ]),
+      h("div", {}, []),
+    ]),
+    root
+  );
+
+  const vnode = h("div", {}, [
     h("p", {}, [h("a", {}, ["Text"])]),
     "Text",
     h("p", {}, [h("a", {}, ["Text"])]),
     "Text",
     h("p", {}, ["Text", h("a", {}, ["Text"]), "Text"]),
-    h("div", {}, [])
+    h("div", {}, []),
   ]);
-
-  var node = mount(oldVnode);
-  node = patch(newVnode, oldVnode, node);
+  render(vnode, root);
+  const node = root.firstChild;
 
   function checkSimlilarity(vdomNode, domnode) {
     if (domnode.nodeType === 3) {
       assert.equal(domnode.textContent, vdomNode, "Text should be the same");
       return;
     }
+    if (
+      vdomNode.props.children == null ||
+      vdomNode.props.children.length === 0
+    ) {
+      assert.equal(domnode.textContent, "", "Dom content should be empty");
+      return;
+    }
+
     assert.equal(
       domnode.childNodes.length,
-      vdomNode.children.length,
+      vdomNode.props.children.length,
       "Children length should match"
     );
     assert.equal(
@@ -415,11 +568,11 @@ test("issues #27: New DOM-tree is not synced with vdom-tree", assert => {
       vdomNode.type.toLowerCase(),
       "Tag names should match"
     );
-    for (let i = 0; i < vdomNode.children.length; i++) {
-      checkSimlilarity(vdomNode.children[i], domnode.childNodes[i]);
+    for (let i = 0; i < vdomNode.props.children.length; i++) {
+      checkSimlilarity(vdomNode.props.children[i], domnode.childNodes[i]);
     }
   }
 
-  checkSimlilarity(newVnode, node);
+  checkSimlilarity(vnode, node);
   assert.end();
 });

@@ -2,6 +2,7 @@
 .babelrc*
 .eslintrc*
 .bookignore
+.vscode
 book.json
 test
 examples

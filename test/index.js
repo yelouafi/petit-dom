@@ -1,11 +1,10 @@
-const jsdom = require("jsdom");
+import jsdom from "jsdom";
 const { JSDOM } = jsdom;
 
 const { document } = new JSDOM(`<!DOCTYPE html><body></body>`).window;
 global.document = document;
 
-import "./utils.test";
-import "./mount.test";
-import "./patch.test";
-import "./range.test";
-import "./select.test";
+import "./mount.test.js";
+import "./patch.test.js";
+import "./range.test.js";
+import "./select.test.js";

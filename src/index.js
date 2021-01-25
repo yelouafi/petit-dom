@@ -1,19 +1,29 @@
-export { h } from "./h.js";
-export { mount, patch, unmount } from "./vdom.js";
-import { mount, patch, unmount } from "./vdom.js";
+export { h, jsx, Fragment } from "./h.js";
+export { mount, patch, patchInPlace, unmount } from "./vdom.js";
+export { scheduleEffect } from "./scheduler.js";
+export { getParentNode, insertDom, removeDom, replaceDom } from "./dom.js";
+import { insertDom } from "./dom.js";
+import { runEffects } from "./scheduler.js";
+import { mount, patchInPlace, DEFAULT_ENV } from "./vdom.js";
 
-export function render(vnode, parentDomNode) {
-  var state = parentDomNode.$$petitDomState$$;
-  var domNode;
-  if (state == null) {
-    domNode = mount(vnode);
-    parentDomNode.appendChild(domNode);
+export function render(vnode, parentDomNode, options = {}) {
+  let rootRef = parentDomNode.$$PETIT_DOM_REF;
+  let env = Object.assign({}, DEFAULT_ENV);
+  Object.assign(env.directives, options.directives);
+  if (rootRef == null) {
+    const ref = mount(vnode, env);
+    parentDomNode.$$PETIT_DOM_REF = { ref, vnode };
+    parentDomNode.textContent = "";
+    insertDom(parentDomNode, ref, null);
   } else {
-    domNode = patch(vnode, state.vnode, state.domNode);
-    if (domNode !== state.domNode) {
-      parentDomNode.replaceChild(domNode, state.domNode);
-      unmount(state.vnode, state.domNode);
-    }
+    rootRef.ref = patchInPlace(
+      parentDomNode,
+      vnode,
+      rootRef.vnode,
+      rootRef.ref,
+      env
+    );
+    rootRef.vnode = vnode;
   }
-  parentDomNode.$$petitDomState$$ = { vnode, domNode };
+  runEffects();
 }

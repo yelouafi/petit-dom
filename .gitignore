@@ -39,3 +39,6 @@ _book
 
 # parcel cache files
 .cache
+
+#VS code 
+.vscode

@@ -1,22 +1,23 @@
 import test from "tape";
-import { h, mount } from "../src";
+import { h, mount } from "../src/index.js";
+import { getDomNode } from "../src/dom.js";
 
-test("text node", assert => {
+test("text node", (assert) => {
   const vnode = "raw text";
-  const node = mount(vnode);
+  const node = getDomNode(mount(vnode));
   assert.equal(node.nodeName, "#text");
   assert.equal(node.nodeValue, "raw text");
   assert.end();
 });
 
-test("simple element", assert => {
+test("simple element", (assert) => {
   const vnode = h(
     "span",
     // JSDOM bug?
     { /*"data-type": "span",*/ class: "input", style: "color: red" },
     "span content"
   );
-  const node = mount(vnode);
+  const node = getDomNode(mount(vnode));
 
   assert.equal(node.nodeName, "SPAN");
   //assert.equal(node.dataset.type, "span");
@@ -27,7 +28,17 @@ test("simple element", assert => {
   assert.end();
 });
 
-test("element with multiple children", assert => {
+test("simple element without children", (assert) => {
+  const vnode = h("input", { type: "text" });
+  const node = getDomNode(mount(vnode));
+
+  assert.equal(node.nodeName, "INPUT");
+  assert.equal(node.type, "text");
+  assert.equal(node.childNodes.length, 0);
+  assert.end();
+});
+
+test("element with multiple children", (assert) => {
   const vnode = h(
     "div",
     null,
@@ -36,7 +47,7 @@ test("element with multiple children", assert => {
     "raw text"
   );
 
-  const node = mount(vnode);
+  const node = getDomNode(mount(vnode));
 
   assert.equal(node.nodeName, "DIV");
   assert.equal(node.childNodes.length, 3);
@@ -58,13 +69,48 @@ test("element with multiple children", assert => {
   assert.end();
 });
 
-test("render functions", assert => {
+test("element with nested array", (assert) => {
+  const vnode = h(
+    "div",
+    null,
+    h("span", null, ["span text"]),
+    [h("input", { type: "number" }), ["nested text"]],
+    "raw text"
+  );
+
+  const node = getDomNode(mount(vnode));
+
+  assert.equal(node.nodeName, "DIV");
+  assert.equal(node.childNodes.length, 4);
+
+  const span = node.childNodes[0];
+  assert.equal(span.nodeName, "SPAN");
+  assert.equal(span.childNodes.length, 1);
+  assert.equal(span.firstChild.nodeValue, "span text");
+
+  const input = node.childNodes[1];
+  assert.equal(input.nodeName, "INPUT");
+  assert.equal(input.childNodes.length, 0);
+  assert.equal(input.type, "number");
+
+  const text1 = node.childNodes[2];
+  assert.equal(text1.nodeName, "#text");
+  assert.equal(text1.nodeValue, "nested text");
+
+  const text2 = node.childNodes[3];
+  assert.equal(text2.nodeName, "#text");
+  assert.equal(text2.nodeValue, "raw text");
+
+  assert.end();
+});
+
+test("render functions", (assert) => {
   function Box(props) {
     return h("h1", { title: props.title }, props.children);
   }
 
   const vnode = h(Box, { title: "box title" }, "box content");
-  const node = mount(vnode);
+  const node = getDomNode(mount(vnode));
 
   assert.equal(node.nodeName, "H1");
   assert.equal(node.title, "box title");
@@ -72,33 +118,28 @@ test("render functions", assert => {
   assert.equal(node.firstChild.nodeValue, "box content");
   assert.end();
 });
-/*
-test("Component", assert => {
+
+test("Component", (assert) => {
   const MyComponent = {
-    mount: (props, content) => {
-      var node = document.createElement("my-component");
-      node._payload = [props, content];
-      return node;
+    mount(props, state) {
+      var ref = mount(h("my-component"));
+      state.payload = props;
+      getDomNode(ref)._state = state;
+      return ref;
     },
-    patch: () => {},
-    unmount: () => {}
   };
 
-  const vnode = h(
-    MyComponent,
-    { some_prop: "some_prop" },
-    { some_cont: "some_cont" }
-  );
+  const props = { some_prop: "some_prop" };
+  const vnode = h(MyComponent, props);
 
-  const node = mount(vnode);
-  assert.equal(vnode._node, node);
+  const node = getDomNode(mount(vnode));
   assert.equal(node.nodeName, "MY-COMPONENT");
-  assert.deepEqual(node._payload, [vnode.props, vnode.content]);
+  assert.deepEqual(node._state.payload, vnode.props);
 
   assert.end();
 });
-*/
-test("svg elements", assert => {
+
+test("svg elements", (assert) => {
   const onclick = () => {};
 
   const vnode = h(
@@ -113,7 +154,7 @@ test("svg elements", assert => {
     ),
     h("span", { onclick }, "...")
   );
-  const node = mount(vnode);
+  const node = getDomNode(mount(vnode));
   assert.equal(node.childNodes.length, 3);
 
   const svgNode = node.childNodes[1];

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      input,
+      button {
+        margin: 0.5em;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module">
+      import { h, render, Fragment } from "../../src/index.js";
+
+      const log = {
+        mount(node, value) {
+          console.log("myDir.mount", node, value);
+        },
+        patch(node, newValue, oldValue) {
+          console.log("myDir.patch", node, oldValue, " to ", newValue);
+        },
+        unmount(node, value) {
+          console.log("myDir.unmount", node, value);
+        },
+      };
+
+      function App(count, key) {
+        return h(
+          "div",
+          null,
+          h(
+            "p",
+            null,
+            "Example of a simple directive which simply logs lifecycle events into the console."
+          ),
+          h(
+            "p",
+            null,
+            `When you click 'Hard Reset button, a new counter is mounted. You should see 'unmount' and
+           'mount' events logged into the console.`
+          ),
+          h(
+            Fragment,
+            { key },
+            h("span", { log: `count ${count}` }, "count ", count),
+            h(
+              "button",
+              {
+                onclick() {
+                  render(App(count + 1, key), root, options);
+                },
+              },
+              "Increment"
+            )
+          ),
+          h(
+            "button",
+            {
+              onclick() {
+                render(App(0, key + 1), root, options);
+              },
+            },
+            "Hard Reset"
+          )
+        );
+      }
+
+      let options = { directives: { log } };
+      const root = document.getElementById("root");
+      render(App(0, 1), root, options);
+    </script>
+  </body>
+</html>

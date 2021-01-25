@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      .container {
+        max-width: 600px;
+        margin: 2em auto;
+      }
+
+      .fill {
+        box-sizing: border-box;
+        display: inline-block;
+        width: 100%;
+      }
+
+      .box {
+        position: relative;
+        border: 1px solid gray;
+        margin: 2px;
+        padding: 5px;
+      }
+
+      .badge {
+        font-size: xx-small;
+        position: absolute;
+        bottom: 0;
+        right: 0;
+      }
+
+      .mounted {
+        background-color: #c6ec9a;
+      }
+
+      .patched {
+        background-color: #ffffff;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root" class="container"></div>
+    <script type="module">
+      import { h, render, mount, patch, Fragment } from "../../src/index.js";
+
+      const HighlightDiff = {
+        mount(props, state, env) {
+          state.vnode = h("span", { class: "box mounted" }, props.children);
+          return mount(state.vnode, env);
+        },
+        patch(parentDom, newProps, oldProps, ref, state, env) {
+          const oldVNode = state.vnode;
+          state.vnode = h("span", { class: "box patched" }, newProps.children);
+          return patch(parentDom, state.vnode, oldVNode, ref, env);
+        },
+        unmount() {},
+      };
+
+      function App({ input, list, prevList }) {
+        const vnode = h(
+          "div",
+          null,
+          h(
+            "p",
+            { class: "fill" },
+            `Enter a comma separated sequence of letters or digits, the first array entry will be used
+            as a key on the corresponding fragment. Press `,
+            h("kbd", null, "ENTER"),
+            ` to commit.`,
+            h(
+              "p",
+              null,
+              `Newly mounted elements appears in green. The complete key path is diaplayed next to the rendered item 
+            to identify the parent fragment`
+            )
+          ),
+          h("input", {
+            class: "fill",
+            value: input,
+            placeholder: "e.g.  A,[2,C,B,D],[1,B, [1, C]]",
+            oninput: (e) =>
+              render(App({ list, prevList, input: e.target.value }), root),
+            onkeydown: (e) => {
+              if (e.which === 13)
+                render(
+                  App({
+                    list: JSON.parse(
+                      `[${e.target.value.replace(/\w+/g, (x) => `"${x}"`)}]`
+                    ),
+                    prevList: list,
+                    input,
+                  }),
+                  root
+                );
+            },
+          }),
+          h(
+            "p",
+            null,
+            " ",
+            `${JSON.stringify(prevList).replace(/"/g, "")} ⇨ ${JSON.stringify(
+              list
+            ).replace(/"/g, "")}`
+          ),
+          h("hr"),
+          h("h3", null, "Diff"),
+          renderSeq(list),
+          h("h3", null, "State"),
+          h("pre", null, JSON.stringify({ input, list, prevList }, null, 2))
+        );
+        //console.log(vnode);
+        return vnode;
+      }
+
+      function renderSeq(list, key = "") {
+        return list.map((it) => {
+          if (Array.isArray(it)) {
+            let [fragmentKey, ...items] = it;
+            return h(
+              Fragment,
+              { key: fragmentKey },
+              renderSeq(items, key + fragmentKey)
+            );
+          } else {
+            return h(
+              HighlightDiff,
+              { key: it },
+              it,
+              h("span", { class: "badge" }, `${key}`)
+            );
+          }
+        });
+      }
+
+      const root = document.getElementById("root");
+      render(App({ input: "", list: [], prevList: [] }), root);
+    </script>
+  </body>
+</html>
