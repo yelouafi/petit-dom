@@ -1,6 +1,7 @@
 export { h, Fragment } from "./h.js";
 export { mount, patch, patchInPlace, unmount } from "./vdom.js";
 export { scheduleEffect } from "./scheduler.js";
+export { getParentNode, insertDom, removeDom, replaceDom } from "./dom.js";
 import { insertDom } from "./dom.js";
 import { runEffects } from "./scheduler.js";
 import { mount, patchInPlace, DEFAULT_ENV } from "./vdom.js";
