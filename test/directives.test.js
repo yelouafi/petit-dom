@@ -1,5 +1,4 @@
 import test from "tape";
-import { h, render } from "../src/index.js";
 
 test("mounting directives", (assert) => {
   assert.pass("TODO");
