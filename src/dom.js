@@ -134,7 +134,7 @@ export function unmountDirectives(domElement, props, env) {
 
 export function mountAttributes(domElement, props, env) {
   for (var key in props) {
-    if (key === "key" || key in env.directives) continue;
+    if (key === "key" || key === "children" || key in env.directives) continue;
     if (key.startsWith("on")) {
       domElement[key.toLowerCase()] = props[key];
     } else {
@@ -145,8 +145,7 @@ export function mountAttributes(domElement, props, env) {
 
 export function patchAttributes(domElement, newProps, oldProps, env) {
   for (var key in newProps) {
-    if (key === "key" || key in env.directives) continue;
-
+    if (key === "key" || key === "children" || key in env.directives) continue;
     var oldValue = oldProps[key];
     var newValue = newProps[key];
     if (oldValue !== newValue) {
@@ -158,7 +157,13 @@ export function patchAttributes(domElement, newProps, oldProps, env) {
     }
   }
   for (key in oldProps) {
-    if (key === "key" || key in env.directives || key in newProps) continue;
+    if (
+      key === "key" ||
+      key === "children" ||
+      key in env.directives ||
+      key in newProps
+    )
+      continue;
     if (key.startsWith("on")) {
       domElement[key.toLowerCase()] = null;
     } else {

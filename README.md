@@ -2,6 +2,11 @@
 
 A minimalist virtual DOM library.
 
+- Supports HTML & SVG elements.
+- Supports Render functions and Fragments.
+- Custom components allows to build your own abstraction around DOM elements.
+- Directives allows you to attach custom behavior to DOM elements.
+
 ## Installation
 
 The library is provided as a set of ES modules. You can install using `npm` or `yarn` and then import
@@ -17,17 +22,27 @@ or
 $ yarn add petit-dom
 ```
 
-Note however no transpiled build is provided. The library will work with all recent versions of `Node` and major browsers. If you're targeting older platforms, make sure to transpile to the appropriate ES version.
+> Note however no transpiled build is provided. The library will work with all recent versions of `Node` and major browsers. If you're targeting older platforms, make sure to transpile to the desired ES version.
 
 To run the examples, you can run a local web server (like npm `http-server` module) from the root folder of the project. Since all example use ES6 modules, you can simply navigate to the example you want and load the desired HTML file.
 
 ## Usage
 
-If you're using Babel you can use JSX syntax by putting a `/* @jsx h */` at the top of the source file.
+If you're using Babel you can use JSX syntax by configuring the jsx runtime
+
+```json
+{
+  "presets": [
+    [
+      "@babel/preset-react",
+      { "runtime": "automatic", "importSource": "petit-dom" }
+    ]
+  ]
+}
+```
 
 ```js
-/* @jsx h */
-import { h, render } from "petit-dom";
+import { render } from "petit-dom";
 
 //  assuming your HTML contains a node with "root" id
 const parentNode = document.getElementById("root");
@@ -39,19 +54,18 @@ render(<h1>Hello world!</h1>, parentNode);
 render(<h1>Hello again</h1>, parentNode);
 ```
 
-You can also use raw `h` function calls if you want, see examples folder for usage.
+Alternatively you can use the classic Babel transform via `/* @jsx h */` on the top. You can also use the raw `h` function calls if you want, see examples folder for usage.
 
 petit-dom also supports render functions
 
 ```js
-/* @jsx h */
-import { h, render } from "petit-dom";
+import { render } from "petit-dom";
 
 function Box(props) {
   return (
     <div>
       <h1>{props.title}</h1>
-      <p>{props.content}</p>
+      <p>{props.children}</p>
     </div>
   );
 }
@@ -64,11 +78,9 @@ arguments will not cause any re-rendering. You can also attach a `shouldUpdate`
 function to the render function to customize the re-rendering behavior (By default
 props are tested for shallow equality).
 
-Note you get the child or children of the render function in `props.content`.
-
 ## Custom components
 
-Besides HTML/SVG tag names and render fucntions, the 'h' function also accepts any object
+Besides HTML/SVG tag names, fragments and render fucntions, the `h` function also accepts any object
 with the following signature
 
 ```js

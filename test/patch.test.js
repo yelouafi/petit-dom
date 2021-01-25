@@ -369,7 +369,7 @@ test("patch render functions", (assert) => {
 
   function Box(props) {
     //renderCalls++;
-    return h("h1", { title: props.title }, props.content);
+    return h("h1", { title: props.title }, props.children);
   }
 
   render(h(Box, { title: "box title" }, "box content"), root);
@@ -407,7 +407,7 @@ test("Patch Component", assert => {
       patchCalls++;
       node._payload = [props, content];
       assert.deepEqual(oldProps, vnode.props);
-      assert.deepEqual(oldContent, vnode.content);
+      assert.deepEqual(oldContent, vnode.children);
       return node;
     },
     unmount: () => {}
@@ -421,7 +421,7 @@ test("Patch Component", assert => {
 
   const node = mount(vnode);
   assert.equal(vnode._node, node);
-  assert.deepEqual(node._payload, [vnode.props, vnode.content]);
+  assert.deepEqual(node._payload, [vnode.props, vnode.children]);
 
   const vnode2 = h(
     MyComponent,
@@ -431,7 +431,7 @@ test("Patch Component", assert => {
   patch(vnode2, vnode);
   assert.equal(vnode2._node, node);
   assert.equal(patchCalls, 1, "patch should invoke Component.patch");
-  assert.deepEqual(node._payload, [vnode2.props, vnode2.content]);
+  assert.deepEqual(node._payload, [vnode2.props, vnode2.children]);
 
   assert.end();
 });
@@ -550,14 +550,17 @@ test("issues #27: New DOM-tree is not synced with vdom-tree", (assert) => {
       assert.equal(domnode.textContent, vdomNode, "Text should be the same");
       return;
     }
-    if (vdomNode.content == null || vdomNode.content.length === 0) {
+    if (
+      vdomNode.props.children == null ||
+      vdomNode.props.children.length === 0
+    ) {
       assert.equal(domnode.textContent, "", "Dom content should be empty");
       return;
     }
 
     assert.equal(
       domnode.childNodes.length,
-      vdomNode.content.length,
+      vdomNode.props.children.length,
       "Children length should match"
     );
     assert.equal(
@@ -565,8 +568,8 @@ test("issues #27: New DOM-tree is not synced with vdom-tree", (assert) => {
       vdomNode.type.toLowerCase(),
       "Tag names should match"
     );
-    for (let i = 0; i < vdomNode.content.length; i++) {
-      checkSimlilarity(vdomNode.content[i], domnode.childNodes[i]);
+    for (let i = 0; i < vdomNode.props.children.length; i++) {
+      checkSimlilarity(vdomNode.props.children[i], domnode.childNodes[i]);
     }
   }
 

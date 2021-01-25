@@ -43,12 +43,12 @@
 
       const HighlightDiff = {
         mount(props, state, env) {
-          state.vnode = h("span", { class: "box mounted" }, props.content);
+          state.vnode = h("span", { class: "box mounted" }, props.children);
           return mount(state.vnode, env);
         },
         patch(parentDom, newProps, oldProps, ref, state, env) {
           const oldVNode = state.vnode;
-          state.vnode = h("span", { class: "box patched" }, newProps.content);
+          state.vnode = h("span", { class: "box patched" }, newProps.children);
           return patch(parentDom, state.vnode, oldVNode, ref, env);
         },
         unmount() {},

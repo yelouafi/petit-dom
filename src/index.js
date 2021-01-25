@@ -1,4 +1,4 @@
-export { h, Fragment } from "./h.js";
+export { h, jsx, Fragment } from "./h.js";
 export { mount, patch, patchInPlace, unmount } from "./vdom.js";
 export { scheduleEffect } from "./scheduler.js";
 export { getParentNode, insertDom, removeDom, replaceDom } from "./dom.js";

@@ -16,38 +16,38 @@ const isValidComponentType = (c) => typeof c?.mount === "function";
 
 export function h(type, props, ...children) {
   props = props ?? EMPTY_OBJECT;
-  // better fail early
-  if (props.key !== props.key) throw new Error("Invalid NaN key");
-  const content =
-    children.length < 1
-      ? undefined
-      : children.length < 2
-      ? children[0]
-      : children;
 
-  if (typeof type === "string") {
-    return {
-      vtype: VTYPE_ELEMENT,
-      type,
-      props,
-      content,
-    };
-  } else if (isValidComponentType(type)) {
-    return {
-      vtype: VTYPE_COMPONENT,
-      type,
-      props: Object.assign({}, props, { content }),
-    };
-  } else if (typeof type === "function") {
-    return {
-      vtype: VTYPE_FUNCTION,
-      type,
-      props: Object.assign({}, props, { content }),
-    };
-  }
-  throw new Error("h: Invalid type!");
+  props =
+    children.length > 1
+      ? Object.assign({}, props, { children })
+      : children.length === 1
+      ? Object.assign({}, props, { children: children[0] })
+      : props;
+
+  return jsx(type, props, props.key);
 }
 
+export function jsx(type, props, key) {
+  if (key !== key) throw new Error("Invalid NaN key");
+  const vtype =
+    typeof type === "string"
+      ? VTYPE_ELEMENT
+      : isValidComponentType(type)
+      ? VTYPE_COMPONENT
+      : typeof type === "function"
+      ? VTYPE_FUNCTION
+      : undefined;
+  if (vtype === undefined) throw new Error("Invalid VNode type");
+  return {
+    vtype,
+    type,
+    key,
+    props,
+  };
+}
+
+export const jsxs = jsx
+
 export function Fragment(props) {
-  return props.content;
+  return props.children;
 }

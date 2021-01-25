@@ -42,7 +42,7 @@ export function mount(vnode, env = DEFAULT_ENV) {
     };
   } else if (isElement(vnode)) {
     let node;
-    let { type, props, content } = vnode;
+    let { type, props } = vnode;
     if (type === "svg" && !env.isSvg) {
       env = Object.assign({}, env, { isSVG: true });
     }
@@ -53,17 +53,18 @@ export function mount(vnode, env = DEFAULT_ENV) {
       node = document.createElementNS(SVG_NS, type);
     }
     mountAttributes(node, props, env);
-    let contentRef = content == null ? content : mount(content, env);
+    let childrenRef =
+      props.children == null ? props.children : mount(props.children, env);
     /**
      * We need to insert content before setting interactive props
      * that rely on children been present (e.g select)
      */
-    if (contentRef != null) insertDom(node, contentRef);
+    if (childrenRef != null) insertDom(node, childrenRef);
     mountDirectives(node, props, env);
     return {
       type: REF_SINGLE,
       node,
-      content: contentRef,
+      children: childrenRef,
     };
   } else if (isNonEmptyArray(vnode)) {
     return {
@@ -117,22 +118,24 @@ export function patch(
       env = Object.assign({}, env, { isSVG: true });
     }
     patchAttributes(ref.node, newVNode.props, oldVNode.props, env);
-    if (oldVNode.content == null) {
-      if (newVNode.content != null) {
-        ref.content = mount(newVNode.content, env);
-        insertDom(ref.node, ref.content);
+    let oldChildren = oldVNode.props.children;
+    let newChildren = newVNode.props.children;
+    if (oldChildren == null) {
+      if (newChildren != null) {
+        ref.children = mount(newChildren, env);
+        insertDom(ref.node, ref.children);
       }
     } else {
-      if (newVNode.content == null) {
+      if (newChildren == null) {
         ref.node.textContent = "";
-        unmount(oldVNode.content, ref.content, env);
-        ref.content = null;
+        unmount(oldChildren, ref.children, env);
+        ref.children = null;
       } else {
-        ref.content = patchInPlace(
+        ref.children = patchInPlace(
           ref.node,
-          newVNode.content,
-          oldVNode.content,
-          ref.content,
+          newChildren,
+          oldChildren,
+          ref.children,
           env
         );
       }
@@ -211,7 +214,8 @@ export function unmount(vnode, ref, env) {
   if (isEmpty(vnode) || isLeaf(vnode)) return;
   if (isElement(vnode)) {
     unmountDirectives(ref.node, vnode.props, env);
-    if (vnode.content != null) unmount(vnode.content, ref.content, env);
+    if (vnode.props.children != null)
+      unmount(vnode.props.children, ref.children, env);
   } else if (isNonEmptyArray(vnode)) {
     vnode.forEach((childVNode, index) =>
       unmount(childVNode, ref.children[index], env)
@@ -256,7 +260,7 @@ function patchChildren(parentDomNode, newChildren, oldchildren, ref, env) {
 
     oldVNode = oldchildren[oldStart];
     newVNode = newChildren[newStart];
-    if (newVNode?.props?.key === oldVNode?.props?.key) {
+    if (newVNode?.key === oldVNode?.key) {
       oldRef = refChildren[oldStart];
       newRef = children[newStart] = patchInPlace(
         parentDomNode,
@@ -272,7 +276,7 @@ function patchChildren(parentDomNode, newChildren, oldchildren, ref, env) {
 
     oldVNode = oldchildren[oldEnd];
     newVNode = newChildren[newEnd];
-    if (newVNode?.props?.key === oldVNode?.props?.key) {
+    if (newVNode?.key === oldVNode?.key) {
       oldRef = refChildren[oldEnd];
       newRef = children[newEnd] = patchInPlace(
         parentDomNode,
@@ -290,15 +294,14 @@ function patchChildren(parentDomNode, newChildren, oldchildren, ref, env) {
       refMap = {};
       for (let i = oldStart; i <= oldEnd; i++) {
         oldVNode = oldchildren[i];
-        if (oldVNode?.props?.key != null) {
-          refMap[oldVNode.props.key] = i;
+        if (oldVNode?.key != null) {
+          refMap[oldVNode.key] = i;
         }
       }
     }
 
     newVNode = newChildren[newStart];
-    const idx =
-      newVNode?.props?.key != null ? refMap[newVNode.props.key] : null;
+    const idx = newVNode?.key != null ? refMap[newVNode.key] : null;
     if (idx != null) {
       oldVNode = oldchildren[idx];
       oldRef = refChildren[idx];

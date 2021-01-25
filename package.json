@@ -3,8 +3,11 @@
   "version": "0.3.4",
   "description": "Minimalist virtual dom library",
   "type": "module",
-  "jsnext:main": "src/index.js",
-  "module": "src/index.js",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./jsx-runtime": "./src/h.js"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/yelouafi/petit-dom.git"
