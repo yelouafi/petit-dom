@@ -1,5 +1,13 @@
 <!DOCTYPE html>
 <html>
+  <head>
+    <style>
+      input,
+      button {
+        margin: 0.5em;
+      }
+    </style>
+  </head>
   <body>
     <div id="root"></div>
     <script type="module">
@@ -10,7 +18,7 @@
           console.log("myDir.mount", node, value);
         },
         patch(node, newValue, oldValue) {
-          console.log("myDir.patch", node, newValue, oldValue);
+          console.log("myDir.patch", node, oldValue, " to ", newValue);
         },
         unmount(node, value) {
           console.log("myDir.unmount", node, value);
@@ -21,6 +29,17 @@
         return h(
           "div",
           null,
+          h(
+            "p",
+            null,
+            "Example of a simple directive which simply logs lifecycle events into the console."
+          ),
+          h(
+            "p",
+            null,
+            `When you click 'Hard Reset button, a new counter is mounted. You should see 'unmount' and
+           'mount' events logged into the console.`
+          ),
           h(
             Fragment,
             { key },

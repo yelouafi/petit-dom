@@ -4,7 +4,7 @@
     <style>
       .container {
         max-width: 600px;
-        margin: auto;
+        margin: 2em auto;
       }
 
       .fill {
@@ -37,7 +37,7 @@
     </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root" class="container"></div>
     <script type="module">
       import { h, render, mount, patch, Fragment } from "../../src/index.js";
 
@@ -57,7 +57,7 @@
       function App({ input, list, prevList }) {
         const vnode = h(
           "div",
-          { class: "container" },
+          null,
           h(
             "p",
             { class: "fill" },

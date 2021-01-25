@@ -2,7 +2,10 @@
 
 A minimalist virtual DOM library.
 
-## Install
+## Installation
+
+The library is provided as a set of ES modules. You can install using `npm` or `yarn` and then import
+from `petit-dom` (see example below).
 
 ```sh
 $ npm install --save petit-dom
@@ -13,6 +16,10 @@ or
 ```sh
 $ yarn add petit-dom
 ```
+
+Note however no transpiled build is provided. The library will work with all recent versions of `Node` and major browsers. If you're targeting older platforms, make sure to transpile to the appropriate ES version.
+
+To run the examples, you can run a local web server (like npm `http-server` module) from the root folder of the project. Since all example use ES6 modules, you can simply navigate to the example you want and load the desired HTML file.
 
 ## Usage
 
@@ -93,13 +100,30 @@ ordinary functions. Any instance specific data must be stored in the `state` obj
 `Ref` is an opaque data structure used by the library to represent DOM content. You can construct
 `Ref` objects by recursively calling `mount` or `patch`.
 
-`env` is used internally by the mount/patch process; \*\*This argument must be forwarded to all
-nested `mount`, `patch` and `unmount`.
+`env` is used internally by the mount/patch process; **This argument must be forwarded to all
+nested `mount`, `patch` and `unmount`**.
 
 Custom components are pretty raw, but they are also flexible and allow
 implementing higher-level solution.
 
 The examples folder contains a simple illustration on how create a custom component.
+
+## Directives
+
+You can also attach custom behaviors to DOM nodes. Directives allows you to obtain references
+to DOM nodes and manage their lifecycle.
+
+A directive is an object with the current interface
+
+```js
+{
+  mount(domElement, value);
+  patch(domElement, newValue, oldValue);
+  unmount(element, lastValue);
+}
+```
+
+There's an example of a simple log directive in the examples folder.
 
 ## API
 
@@ -131,9 +155,13 @@ upstream (e.g. when called inside a custom component).
 ### `patch(parentDOM, newVNode, oldVNode, ref, env) => Ref`
 
 Updates (or eventually replaces) the actual DOM content `ref` based on the difference
-between `newVNode` and `oldVNode`. Returns either the updated or a newly created `Ref`.
+between `newVNode` and `oldVNode`. Returns either the `ref` updated or a newly created `Ref`.
 
 ### `unmount(vnode, ref, env)`
 
 This is called after `domNode` has been retired from the DOM tree. This is typically
 needed by custom components to implement cleanup logic.
+
+### `getParentNode(ref) => Ref`
+
+Retreive the parent DOM of a given DOM content.
