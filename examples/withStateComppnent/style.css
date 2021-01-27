@@ -1,0 +1,46 @@
+body {
+  font-family: sans-serif;
+}
+
+.container {
+  max-width: 600px;
+  margin: 2em auto;
+}
+
+.box {
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.shape {
+  fill: none;
+  stroke: #111;
+  stroke-width: 1.5;
+  pointer-events: none;
+}
+.control-line {
+  stroke: #888;
+  stroke-width: 0.5;
+  pointer-events: none;
+}
+
+.poly-line {
+  stroke: yellow;
+  stroke-width: 5;
+  opacity: 0;
+}
+
+.poly-line:hover {
+  opacity: 0.5;
+}
+
+.handle {
+  fill: #fff;
+  opacity: 0;
+  stroke: #888;
+  stroke-width: 2;
+  cursor: pointer;
+}
+.handle:hover {
+  opacity: 0.5;
+}
