@@ -103,7 +103,7 @@ by the library at the moment suggested by its name:
 - `unmount` is called after the DOM content has been removed from DOM tree.
 
 `props`, `newProps` and `oldProps` all refer to the properties provided to the `h` function
-(or via JSX). The child or children are stored in the `content` property of the props object.
+(or via JSX). The child or children are stored in the `children` property of the props object.
 
 `state` is an object provided to persist any needed data between different invocations. As
 mentioned, the 3 functions above are not to be treated as instance methods (no `this`) but as
