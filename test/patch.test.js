@@ -24,6 +24,26 @@ function shuffle(array) {
   return array;
 }
 
+test("DOM node", (assert) => {
+  const root = document.createElement("div");
+
+  const node = document.createTextNode("node1");
+
+  render(node, root);
+  const node1 = root.firstChild;
+
+  node.nodeValue = "node1 new text";
+
+  render(node, root);
+  const node2 = root.firstChild;
+
+  assert.equal(node, node1);
+  assert.equal(node, node2);
+  assert.equal(node.nodeValue, "node1 new text");
+
+  assert.end();
+});
+
 test("text node", (assert) => {
   const root = document.createElement("div");
 
@@ -393,49 +413,57 @@ test("patch render functions", (assert) => {
     */
   assert.end();
 });
-/*
-test("Patch Component", assert => {
-  let patchCalls = 0;
+
+test("Patch Component/sync rendering", (assert) => {
+  const root = document.createElement("div");
 
   const MyComponent = {
-    mount: (props, content) => {
-      var node = document.createElement("my-component");
-      node._payload = [props, content];
-      return node;
+    mount: (me) => {
+      me.render(me.props.prop);
     },
-    patch: (node, props, oldProps, content, oldContent) => {
-      patchCalls++;
-      node._payload = [props, content];
-      assert.deepEqual(oldProps, vnode.props);
-      assert.deepEqual(oldContent, vnode.children);
-      return node;
+    patch: (me) => {
+      me.render(me.props.prop + me.oldProps.prop);
     },
-    unmount: () => {}
+    unmount: () => {},
   };
 
-  const vnode = h(
-    MyComponent,
-    { some_prop: "some prop" },
-    { some_cont: "some content" }
-  );
+  render(h(MyComponent, { prop: "prop1" }), root);
+  const node = root.firstChild;
+  assert.equal(node.nodeValue, "prop1");
 
-  const node = mount(vnode);
-  assert.equal(vnode._node, node);
-  assert.deepEqual(node._payload, [vnode.props, vnode.children]);
+  render(h(MyComponent, { prop: "prop2" }), root);
 
-  const vnode2 = h(
-    MyComponent,
-    { some_prop: "another prop" },
-    { some_cont: "another content" }
-  );
-  patch(vnode2, vnode);
-  assert.equal(vnode2._node, node);
-  assert.equal(patchCalls, 1, "patch should invoke Component.patch");
-  assert.deepEqual(node._payload, [vnode2.props, vnode2.children]);
+  assert.equal(node.nodeValue, "prop2prop1");
 
   assert.end();
 });
-*/
+
+test("Patch Component/async rendering", (assert) => {
+  const root = document.createElement("div");
+
+  let p = new Promise((resolve) => setTimeout(resolve, 0));
+  const MyComponent = {
+    mount: (me) => {
+      me.render(me.props.prop);
+    },
+    patch: (me) => {
+      p = p.then(() => {
+        me.render(me.props.prop + me.oldProps.prop);
+      });
+    },
+    unmount: () => {},
+  };
+
+  render(h(MyComponent, { prop: "prop1" }), root);
+
+  render(h(MyComponent, { prop: "prop2" }), root);
+
+  assert.equal(root.firstChild.nodeValue, "prop1");
+  p.then(() => {
+    assert.equal(root.firstChild.nodeValue, "prop2prop1");
+    assert.end();
+  });
+});
 
 test("issues #24: applyDiff fails to insert when oldChildren is modified", (assert) => {
   const root = document.createElement("div");

@@ -1,9 +1,6 @@
 export { h, jsx, Fragment } from "./h.js";
-export { mount, patch, patchInPlace, unmount } from "./vdom.js";
-export { scheduleEffect } from "./scheduler.js";
-export { getParentNode, insertDom, removeDom, replaceDom } from "./dom.js";
+export { getParentNode } from "./dom.js";
 import { insertDom } from "./dom.js";
-import { runEffects } from "./scheduler.js";
 import { mount, patchInPlace, DEFAULT_ENV } from "./vdom.js";
 
 export function render(vnode, parentDomNode, options = {}) {
@@ -25,5 +22,4 @@ export function render(vnode, parentDomNode, options = {}) {
     );
     rootRef.vnode = vnode;
   }
-  runEffects();
 }

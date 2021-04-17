@@ -16,14 +16,15 @@ const coords0 = {
   cy2: 150,
 };
 
-const App = withState((_, coords, setCoords) => {
-  const { x1, y1, x2, y2, cx1, cy1, cx2, cy2 } = coords;
+const App = withState(
+  (_, coords, setCoords) => {
+    const { x1, y1, x2, y2, cx1, cy1, cx2, cy2 } = coords;
 
-  const onCoordsChange = (coordsChange) => {
-    setCoords((coords) => ({ ...coords, ...coordsChange }));
-  };
+    const onCoordsChange = (coordsChange) => {
+      setCoords((coords) => ({ ...coords, ...coordsChange }));
+    };
 
-  return html`<${Fragment}>
+    return html`<${Fragment}>
     <svg height="240" width="480" class=box>
       <g transform="translate(50, 10)">
         <${Bezier}
@@ -41,7 +42,9 @@ const App = withState((_, coords, setCoords) => {
         <span style="color: ${colors[1]}"> ${x2} ${y2}</span>
     </pre>
   </Fragment>`;
-}, coords0);
+  },
+  () => coords0
+);
 
 const rootElement = document.getElementById("root");
 render(html`<${App} />`, rootElement);

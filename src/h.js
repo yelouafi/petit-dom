@@ -46,7 +46,7 @@ export function jsx(type, props, key) {
   };
 }
 
-export const jsxs = jsx
+export const jsxs = jsx;
 
 export function Fragment(props) {
   return props.children;

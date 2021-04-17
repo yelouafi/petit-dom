@@ -42,16 +42,12 @@
       import { h, render, mount, patch, Fragment } from "../../src/index.js";
 
       const HighlightDiff = {
-        mount(props, state, env) {
-          state.vnode = h("span", { class: "box mounted" }, props.children);
-          return mount(state.vnode, env);
+        mount({ render, props }) {
+          render( h("span", { class: "box mounted" }, props.children) );
         },
-        patch(parentDom, newProps, oldProps, ref, state, env) {
-          const oldVNode = state.vnode;
-          state.vnode = h("span", { class: "box patched" }, newProps.children);
-          return patch(parentDom, state.vnode, oldVNode, ref, env);
-        },
-        unmount() {},
+        patch({ render, props }) {          
+          render( h("span", { class: "box patched" }, props.children) );          
+        }
       };
 
       function App({ input, list, prevList }) {
