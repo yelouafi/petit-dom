@@ -1,6 +1,6 @@
 {
   "name": "petit-dom",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Minimalist virtual dom library",
   "type": "module",
   "main": "./src/index.js",
