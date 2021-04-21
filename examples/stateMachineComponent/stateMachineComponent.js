@@ -1,10 +1,3 @@
-import {
-  mount,
-  patchInPlace,
-  unmount,
-  getParentNode,
-} from "../../src/index.js";
-
 export function createSMComponent({ view, update, output }) {
   return {
     mount(me) {
