@@ -1,8 +1,9 @@
 import jsdom from "jsdom";
 const { JSDOM } = jsdom;
 
-const { document } = new JSDOM(`<!DOCTYPE html><body></body>`).window;
+const { document, Node } = new JSDOM(`<!DOCTYPE html><body></body>`).window;
 global.document = document;
+global.Node = Node;
 
 import "./mount.test.js";
 import "./patch.test.js";

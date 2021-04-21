@@ -17,7 +17,6 @@
     "virtual dom"
   ],
   "author": "Yassine ELOUAFI <yelouafi@gmail.com>",
-  "dependencies": {},
   "devDependencies": {
     "eslint": "^6.4.0",
     "faucet": "^0.0.1",

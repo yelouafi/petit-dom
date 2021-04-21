@@ -22,12 +22,54 @@ import {
   patchDirectives,
   unmountDirectives,
   patchAttributes,
+  getParentNode,
 } from "./dom.js";
 
 export const DEFAULT_ENV = {
   isSvg: false,
   directives: DOM_PROPS_DIRECTIVES,
 };
+
+class Renderer {
+  constructor(props, env) {
+    this.props = props;
+    this._STATE_ = {
+      env,
+      vnode: null,
+      parentDomNode: null,
+      ref: mount(null),
+    };
+    this.render = this.render.bind(this);
+  }
+
+  setProps(props) {
+    this.oldProps = this.props;
+    this.props = props;
+  }
+
+  render(vnode) {
+    const state = this._STATE_;
+    const oldVNode = state.vnode;
+    state.vnode = vnode;
+    if (state.parentDomNode == null) {
+      let parentNode = getParentNode(state.ref);
+      if (parentNode == null) {
+        state.ref = mount(vnode, state.env);
+        return;
+      } else {
+        state.parentDomNode = parentNode;
+      }
+    }
+    // here we're sure state.parentDOMNode is defined
+    state.ref = patchInPlace(
+      state.parentDomNode,
+      vnode,
+      oldVNode,
+      state.ref,
+      state.env
+    );
+  }
+}
 
 export function mount(vnode, env = DEFAULT_ENV) {
   if (isEmpty(vnode)) {
@@ -80,12 +122,17 @@ export function mount(vnode, env = DEFAULT_ENV) {
       childState: childVNode,
     };
   } else if (isComponent(vnode)) {
-    let childState = {};
-    let childRef = vnode.type.mount(vnode.props, childState, env);
+    let renderer = new Renderer(vnode.props, env);
+    vnode.type.mount(renderer);
     return {
       type: REF_PARENT,
-      childRef,
-      childState,
+      childRef: renderer._STATE_.ref,
+      childState: renderer,
+    };
+  } else if (vnode instanceof Node) {
+    return {
+      type: REF_SINGLE,
+      node: vnode,
     };
   }
   if (vnode === undefined) {
@@ -184,24 +231,24 @@ export function patch(
     isComponent(oldVNode) &&
     newVNode.type === oldVNode.type
   ) {
-    let childRef = newVNode.type.patch(
-      parentDomNode,
-      newVNode.props,
-      oldVNode.props,
-      ref.childRef,
-      ref.childState,
-      env
-    );
-    if (childRef !== ref.childRef) {
+    const renderer = ref.childState;
+    const state = renderer._STATE_;
+    state.env = env;
+    state.parentNode = parentDomNode;
+    renderer.setProps(newVNode.props);
+    newVNode.type.patch(renderer);
+    if (ref.childRef !== state.ref) {
       return {
         type: REF_PARENT,
-        childRef,
-        childState: ref.childState,
+        childRef: state.ref,
+        childState: renderer,
       };
     } else {
-      ref.childRef = childRef;
       return ref;
     }
+  } else if (newVNode instanceof Node && oldVNode instanceof Node) {
+    ref.node = newVNode;
+    return ref;
   } else {
     return mount(newVNode, env);
   }
@@ -211,7 +258,7 @@ export function patch(
  * Execute any compoenent specific unmount code
  */
 export function unmount(vnode, ref, env) {
-  if (isEmpty(vnode) || isLeaf(vnode)) return;
+  // if (vnode instanceof Node ||  isEmpty(vnode) || isLeaf(vnode)) return;
   if (isElement(vnode)) {
     unmountDirectives(ref.node, vnode.props, env);
     if (vnode.props.children != null)
@@ -223,7 +270,7 @@ export function unmount(vnode, ref, env) {
   } else if (isRenderFunction(vnode)) {
     unmount(ref.childState, ref.childRef, env);
   } else if (isComponent(vnode)) {
-    vnode.type.unmount(vnode.props, ref.childRef, ref.childState, env);
+    vnode.type.unmount(ref.childState);
   }
 }
 

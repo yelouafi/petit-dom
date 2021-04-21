@@ -5,46 +5,21 @@ import {
   getParentNode,
 } from "../../src/index.js";
 
-export function withState(render, getInitialState) {
+export function withState(view, getInitialState) {
   return {
-    mount(props, instance, env) {
-      instance.env = env;
-      instance.props = props;
-      instance.setState = (updater) => {
-        let newState = updater(instance.state, instance.props);
-        if (newState !== instance.state) {
-          instance.state = newState;
-          updateUI(instance);
+    mount(me) {
+      me.view = view;
+      me.setState = (updater) => {
+        let newState = updater(me.state, me.props);
+        if (newState !== me.state) {
+          me.state = newState;
+          me.render(view(me.props, me.state, me.setState));
         }
       };
-      instance.state =
-        typeof getInitialState === "function"
-          ? getInitialState(props)
-          : getInitialState;
-      instance.vnode = render(props, instance.state, instance.setState);
-      instance.childRef = mount(instance.vnode, env);
-      return instance.childRef;
+      me.setState((_, props) => getInitialState(props));
     },
-    patch(parentNode, newProps, oldProps, ref, instance, env) {
-      instance.props = newProps;
-      instance.env = env;
-      updateUI(instance);
-      return instance.childRef;
-    },
-    unmount(props, ref, instance, env) {
-      unmount(instance.vnode, instance.childRef, env);
+    patch(me) {
+      me.render(me.view(me.props, me.state, me.setState));
     },
   };
-
-  function updateUI(instance) {
-    let oldVNode = instance.vnode;
-    instance.vnode = render(instance.props, instance.state, instance.setState);
-    instance.childRef = patchInPlace(
-      getParentNode(instance.childRef),
-      instance.vnode,
-      oldVNode,
-      instance.childRef,
-      instance.env
-    );
-  }
 }

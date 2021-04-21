@@ -76,10 +76,15 @@ function update(_, state, event) {
   if (state === undefined) return initState;
   if (event.tag === "USER_CHANGED" && event.user === "") return { tag: "IDLE" };
   // console.log("new event", state, event);
-  return transitions[state.tag][event.tag](state, event);
+  let tr = transitions[state.tag][event.tag];
+  if (tr != null) {
+    return tr(state, event);
+  } else {
+    return state;
+  }
 }
 
-async function output(_, state, event, emit) {
+async function output(_, state, emit) {
   if (state.tag === "REQUEST_PENDING") {
     const response = await fetch(
       `https://api.github.com/users/${state.user}/repos`
@@ -93,7 +98,7 @@ async function output(_, state, event, emit) {
   }
 }
 
-function renderApp(_, state, emit) {
+function view(_, state, emit) {
   return h(
     "div",
     null,
@@ -135,7 +140,7 @@ function Repo({ repo }) {
 }
 
 export const GithubRepos = createSMComponent({
-  render: renderApp,
+  view,
   update,
   output,
 });
