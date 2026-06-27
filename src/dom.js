@@ -45,7 +45,7 @@ export function getDomNode(ref) {
   } else if (ref.type === REF_PARENT) {
     return getDomNode(ref.childRef);
   }
-  throw new Error("Unkown ref type " + JSON.stringify(ref));
+  throw new Error("Unknown ref type " + JSON.stringify(ref));
 }
 
 export function getParentNode(ref) {
@@ -56,7 +56,7 @@ export function getParentNode(ref) {
   } else if (ref.type === REF_PARENT) {
     return getParentNode(ref.childRef);
   }
-  throw new Error("Unkown ref type " + ref);
+  throw new Error("Unknown ref type " + ref);
 }
 
 export function getNextSibling(ref) {
@@ -67,7 +67,7 @@ export function getNextSibling(ref) {
   } else if (ref.type === REF_PARENT) {
     return getNextSibling(ref.childRef);
   }
-  throw new Error("Unkown ref type " + JSON.stringify(ref));
+  throw new Error("Unknown ref type " + JSON.stringify(ref));
 }
 
 export function insertDom(parent, ref, nextSibling) {
@@ -80,7 +80,7 @@ export function insertDom(parent, ref, nextSibling) {
   } else if (ref.type === REF_PARENT) {
     insertDom(parent, ref.childRef, nextSibling);
   } else {
-    throw new Error("Unkown ref type " + JSON.stringify(ref));
+    throw new Error("Unknown ref type " + JSON.stringify(ref));
   }
 }
 
@@ -94,7 +94,7 @@ export function removeDom(parent, ref) {
   } else if (ref.type === REF_PARENT) {
     removeDom(parent, ref.childRef);
   } else {
-    throw new Error("Unkown ref type " + ref);
+    throw new Error("Unknown ref type " + ref);
   }
 }
 
