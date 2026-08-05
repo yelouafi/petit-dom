@@ -283,7 +283,7 @@ export function patchInPlace(parentDomNode, newVNode, oldVNode, ref, env) {
   return newRef;
 }
 
-function patchChildren(parentDomNode, newChildren, oldchildren, ref, env) {
+function patchChildren(parentDomNode, newChildren, oldChildren, ref, env) {
   // We need to retreive the next sibling before the old children
   // get eventually removed from the current DOM document
   const nextNode = getNextSibling(ref);
@@ -292,7 +292,7 @@ function patchChildren(parentDomNode, newChildren, oldchildren, ref, env) {
   let newStart = 0,
     oldStart = 0,
     newEnd = newChildren.length - 1,
-    oldEnd = oldchildren.length - 1;
+    oldEnd = oldChildren.length - 1;
   let oldVNode, newVNode, oldRef, newRef, refMap;
 
   while (newStart <= newEnd && oldStart <= oldEnd) {
